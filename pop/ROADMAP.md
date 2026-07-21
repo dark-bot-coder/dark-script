@@ -4,8 +4,7 @@ Ficha: [[PROJECT|Dark Script]]
 
 | # | Epoch | Descrição (≤1 linha) | Status |
 |---|-------|----------------------|--------|
-
-_Nenhuma epoch ainda — o repo aguarda a chegada dos primeiros scripts; o roadmap nasce com eles._
+| 1 | [[roadmap/1-gerencia-de-vod|Gerência de VOD]] | Preparar a estrutura de pastas de scripts e entregar os primeiros scripts de gerência de VOD. | pendente |
 
 **Status de epoch/phase:** pendente | em andamento | concluída
 

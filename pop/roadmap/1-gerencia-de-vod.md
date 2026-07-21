@@ -1,0 +1,28 @@
+# Epoch 1 — Gerência de VOD
+
+- **Projeto:** [[PROJECT|Dark Script]] · **Roadmap:** [[ROADMAP|Roadmap]]
+- **Status:** pendente
+- **Descrição:** Preparar a estrutura de pastas de scripts e entregar os primeiros scripts de gerência de VOD.
+
+## Recon e forks
+
+- [ ] RECON NEEDED: método confiável de detectar faststart sem reprocessar o arquivo — check: validar na 1.2.1 se a inspeção do moov atom via ffprobe basta.
+- Fork: se os servidores exigirem outra stack além de Python/SH → registrar na phase afetada antes de expandir o scaffold.
+
+## Phase 1.1 — Preparação
+
+- **Status:** pendente
+- **Descrição:** Criar o scaffold das pastas de scripts com env, venv, reports e README de listagem.
+
+| Task | Descrição (≤1 linha) | Status |
+|------|----------------------|--------|
+| `1.1.1-script-estrutura-pastas` | Criar vod-scripts/, creed-scripts/, bin-scripts/ e office-scripts/ com .env.example, requirements.txt (quando necessário), script SH de venv, reports/ gitignorada e README de listagem de scripts. · size: M | não iniciada |
+
+## Phase 1.2 — Scripts de VOD
+
+- **Status:** pendente
+- **Descrição:** Entregar os scripts de gerência da biblioteca VOD, começando pelo diagnóstico de compatibilidade com TVs LG.
+
+| Task | Descrição (≤1 linha) | Status |
+|------|----------------------|--------|
+| `1.2.1-script-vod-report-faststart` | Ler SCAN_VOD_FOLDER, escanear mp4/mkv da pasta e subpastas diretas, detectar arquivos sem flag faststart (que falham em TVs LG) e gerar report MD em reports/ com data YYYYMMDDHHii no nome listando os faltosos. · size: M | não iniciada |
