@@ -1,8 +1,9 @@
 # Epoch 1 — Gerência de VOD
 
 - **Projeto:** [[PROJECT|Dark Script]] · **Roadmap:** [[ROADMAP|Roadmap]]
-- **Status:** pendente
+- **Status:** em andamento
 - **Descrição:** Preparar a estrutura de pastas de scripts e entregar os primeiros scripts de gerência de VOD.
+- **Yolo:** sim
 
 ## Recon e forks
 
