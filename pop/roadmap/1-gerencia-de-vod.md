@@ -17,7 +17,6 @@
 
 | Task | Descrição (≤1 linha) | Status |
 |------|----------------------|--------|
-| [[1.1.1-script-estrutura-pastas]] | Criar vod-scripts/, creed-scripts/, bin-scripts/ e office-scripts/ com .env.example, requirements.txt (quando necessário), script SH de venv, reports/ gitignorada e README de listagem de scripts. · size: M | 001_initial_task |
 
 ## Phase 1.2 — Scripts de VOD
 
