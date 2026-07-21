@@ -10,4 +10,8 @@ Scripts da família VOD: gerência da biblioteca de VOD, rodando em servidores e
 
 ## Scripts
 
-Nenhum script ainda.
+### report_faststart.py
+
+Lista os vídeos `.mp4`/`.mkv` de `SCAN_VOD_FOLDER` (pasta + subpastas diretas) sem o índice no início do arquivo (faststart), gerando um relatório em `reports/`. Requer `ffprobe` no PATH. Somente diagnóstico — nenhum vídeo é alterado.
+
+Uso: `python report_faststart.py` (lê `SCAN_VOD_FOLDER` do ambiente ou do `.env`).
