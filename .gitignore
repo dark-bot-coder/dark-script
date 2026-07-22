@@ -4,3 +4,11 @@ __pycache__/
 !pop/worktrees/
 pop/worktrees/*
 !pop/worktrees/.gitkeep
+
+# Segredos locais e ambientes virtuais
+.env
+.venv/
+
+# Relatórios gerados (mantém a pasta versionada via .gitkeep)
+**/reports/*
+!**/reports/.gitkeep
