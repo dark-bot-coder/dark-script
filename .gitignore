@@ -1,1 +1,6 @@
 __pycache__/
+
+# included-harness: preservar a anatomia standalone no Git
+!pop/worktrees/
+pop/worktrees/*
+!pop/worktrees/.gitkeep

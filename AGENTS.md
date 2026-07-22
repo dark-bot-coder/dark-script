@@ -5,7 +5,7 @@
 - **Type:** included.
 - **Idioma do projeto:** pt-BR em documentação, specs, código e comentários.
 - **Ficha:** [[PROJECT|PROJECT]]
-- **Roadmap:** [[ROADMAP|ROADMAP]]
+- **Roadmap:** [[ROADMAP|ROADMAP]] · **Modifications:** [[MODIFICATIONS|MODIFICATIONS]] (criado sob demanda — hotfixes e features emergentes pequenas fora do planejamento)
 
 ## Parte de
 
@@ -27,7 +27,7 @@ Scripts de organização externa do Dark Store: rodam em servidores próprios e 
 
 Toda alteração percorre pop/kanban/001_initial_task → … → 006_done, conforme [[WORKFLOW|WORKFLOW]]. Tasks deste repo usam seu kanban e uma worktree em pop/worktrees/<id>/.
 
-O 002 pertence a planejador separado. Em 004, frente coesa recebe executor direto; DAG, múltiplas skills ou write sets recebem suborquestrador. Em yolo, crítico strong decide em 003 e revisa em 005; cada gate aceita duas devoluções e ativa circuit breaker na 3ª falha. Tasks independentes avançam em waves de até três; dependência ou overlap serializa. O 006 integra em `develop` e abre automaticamente o PR final para `main`.
+O 002 pertence a planejador separado. Em 004, frente coesa recebe executor direto; DAG, múltiplas skills ou write sets recebem suborquestrador. Em yolo, o 003 só existe para `critical: true` (crítico strong) — as demais tasks yolo transitam 002 → 004 direto; o 005 é o gate único de qualidade (strong, sessão limpa) e verifica primeiro se o pedido original do card foi atendido. Cada gate aceita duas devoluções e ativa circuit breaker na 3ª falha. Tasks independentes avançam em waves de até três; dependência ou overlap serializa. O 006 integra em `develop` e, no fechamento do escopo marcado (task, phase/epoch ou modification), abre automaticamente o PR final para `main`.
 
 ## Skills
 
