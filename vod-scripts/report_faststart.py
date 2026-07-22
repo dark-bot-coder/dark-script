@@ -55,18 +55,28 @@ def varrer_videos(raiz):
 
 
 def mp4_tem_faststart(caminho):
-    resultado = subprocess.run(
-        ["ffprobe", "-v", "trace", "-read_intervals", "0%+#1", str(caminho)],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
+    try:
+        resultado = subprocess.run(
+            ["ffprobe", "-v", "trace", "-read_intervals", "0%+#1", str(caminho)],
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        raise ErroLeitura("ffprobe excedeu o tempo limite de 60s")
     if resultado.returncode != 0:
         raise ErroLeitura("ffprobe não conseguiu ler o arquivo")
     boxes = LINHA_BOX_RAIZ.findall(resultado.stderr)
     if "moov" not in boxes or "mdat" not in boxes:
         raise ErroLeitura("boxes moov/mdat não encontrados")
     return boxes.index("moov") < boxes.index("mdat")
+
+
+def _ler_byte(arq):
+    byte = arq.read(1)
+    if not byte:
+        raise ErroLeitura("fim inesperado no cabeçalho EBML")
+    return byte[0]
 
 
 def _ler_id_ebml(arq):
@@ -81,23 +91,21 @@ def _ler_id_ebml(arq):
         raise ErroLeitura("ID EBML inválido")
     valor = primeiro[0]
     for _ in range(tamanho - 1):
-        valor = (valor << 8) | arq.read(1)[0]
+        valor = (valor << 8) | _ler_byte(arq)
     return valor
 
 
 def _ler_tamanho_ebml(arq):
-    primeiro = arq.read(1)
-    if not primeiro:
-        raise ErroLeitura("fim inesperado no cabeçalho EBML")
+    primeiro = _ler_byte(arq)
     mascara, tamanho = 0x80, 1
-    while tamanho <= 8 and not (primeiro[0] & mascara):
+    while tamanho <= 8 and not (primeiro & mascara):
         mascara >>= 1
         tamanho += 1
     if tamanho > 8:
         raise ErroLeitura("tamanho EBML inválido")
-    valor = primeiro[0] & (mascara - 1)
+    valor = primeiro & (mascara - 1)
     for _ in range(tamanho - 1):
-        valor = (valor << 8) | arq.read(1)[0]
+        valor = (valor << 8) | _ler_byte(arq)
     if valor == (1 << (7 * tamanho)) - 1:
         return None
     return valor
