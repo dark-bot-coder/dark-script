@@ -7,12 +7,12 @@
 
 ## Recon e forks
 
-- [ ] RECON NEEDED: método confiável de detectar faststart sem reprocessar o arquivo — check: validar na 1.2.1 se a inspeção do moov atom via ffprobe basta.
+- [x] RECON NEEDED: método confiável de detectar faststart sem reprocessar o arquivo — resolvido na 1.2.1: MP4 via trace do ffprobe (moov antes de mdat); MKV via parsing stdlib de cabeçalhos EBML (Cues antes do primeiro Cluster).
 - Fork: se os servidores exigirem outra stack além de Python/SH → registrar na phase afetada antes de expandir o scaffold.
 
 ## Phase 1.1 — Preparação
 
-- **Status:** pendente
+- **Status:** concluída
 - **Descrição:** Criar o scaffold das pastas de scripts com env, venv, reports e README de listagem.
 
 | Task | Descrição (≤1 linha) | Status |
@@ -20,7 +20,7 @@
 
 ## Phase 1.2 — Scripts de VOD
 
-- **Status:** pendente
+- **Status:** em andamento
 - **Descrição:** Entregar os scripts de gerência da biblioteca VOD, começando pelo diagnóstico de compatibilidade com TVs LG.
 
 | Task | Descrição (≤1 linha) | Status |
