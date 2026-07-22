@@ -25,4 +25,4 @@
 
 | Task | Descrição (≤1 linha) | Status |
 |------|----------------------|--------|
-| `1.2.1-script-vod-report-faststart` | Ler SCAN_VOD_FOLDER, escanear mp4/mkv da pasta e subpastas diretas, detectar arquivos sem flag faststart (que falham em TVs LG) e gerar report MD em reports/ com data YYYYMMDDHHii no nome listando os faltosos. · size: M | não iniciada |
+| [[1.2.1-script-vod-report-faststart]] | Ler SCAN_VOD_FOLDER, escanear mp4/mkv da pasta e subpastas diretas, detectar arquivos sem flag faststart (que falham em TVs LG) e gerar report MD em reports/ com data YYYYMMDDHHii no nome listando os faltosos. · size: M | 001_initial_task |
