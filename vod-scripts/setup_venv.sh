@@ -10,15 +10,15 @@ if [ ! -d .venv ]; then
     echo "Criando ambiente virtual em .venv ..."
     python3 -m venv .venv
 else
-    echo "Ambiente virtual .venv já existe; reutilizando."
+    echo "Ambiente virtual .venv já existe; reutilizando e atualizando dependências."
 fi
 
 echo "Atualizando pip ..."
 .venv/bin/pip install --upgrade pip --quiet
 
 if [ -f requirements.txt ]; then
-    echo "Instalando dependências de requirements.txt ..."
-    .venv/bin/pip install -r requirements.txt
+    echo "Instalando/atualizando dependências de requirements.txt ..."
+    .venv/bin/pip install --upgrade -r requirements.txt
 else
     echo "Nenhum requirements.txt encontrado; nenhuma dependência instalada."
 fi
