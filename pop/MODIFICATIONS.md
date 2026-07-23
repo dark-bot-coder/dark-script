@@ -6,6 +6,6 @@ Ficha: [[PROJECT|Dark Script]] · Roadmap: [[ROADMAP|Roadmap]]
 
 | # | Modification | Descrição (≤1 linha) | Status |
 |---|--------------|----------------------|--------|
-| M-1 | Correção do waiver implícito | [[M-1.1-explicitar-waiver-kanban-dark-script]] propaga a precedência estrita entre comando humano e kanban. · size: S | em andamento |
+| M-1 | Correção do waiver implícito | `M-1.1-explicitar-waiver-kanban-dark-script` propagou a precedência estrita entre comando humano e kanban. · size: S | concluída |
 
 **Status de modification:** aberta | em andamento | concluída
