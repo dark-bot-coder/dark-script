@@ -27,6 +27,8 @@ Scripts de organização externa do Dark Store: rodam em servidores próprios e 
 
 Toda alteração percorre pop/kanban/001_initial_task → … → 006_done, conforme [[WORKFLOW|WORKFLOW]]. Tasks deste repo usam seu kanban e uma worktree em pop/worktrees/<id>/.
 
+Pedido de alteração sem card aciona `new-task` → `advance-task`; “iniciar o fluxo em yolo” materializa/libera a task e percorre a rota yolo inteira, nunca execução direta.
+
 O 002 pertence a planejador separado. Em 004, frente coesa recebe executor direto; DAG, múltiplas skills ou write sets recebem suborquestrador. Em yolo, o 003 só existe para `critical: true` (crítico strong) — as demais tasks yolo transitam 002 → 004 direto; o 005 é o gate único de qualidade (strong, sessão limpa) e verifica primeiro se o pedido original do card foi atendido. Cada gate aceita duas devoluções e ativa circuit breaker na 3ª falha. Tasks independentes avançam em waves de até três; dependência ou overlap serializa. O 006 integra em `develop` e, no fechamento do escopo marcado (task, phase/epoch ou modification), abre automaticamente o PR final para `main`.
 
 ## Skills
@@ -49,7 +51,8 @@ O 002 pertence a planejador separado. Em 004, frente coesa recebe executor diret
 
 ## Regras essenciais
 
-- Nunca executar item (user), trabalhar fora de 004_processing ou fazer merge de PR de task.
+- Nunca executar item (user), trabalhar fora de uma task que chegou legitimamente a `004_processing` (003 aprovado ou yolo não crítico 002→004) ou fazer merge de PR de task.
+- Comando humano sobrescreve somente a regra/gate que nomeia; “aplique”, “execute”, “urgente”, “até finalizar” ou “em yolo” não dispensam o fluxo. Só dispensa literal ativa o protocolo de desvio do [[WORKFLOW|WORKFLOW]], sempre com memory e avaliação de specs/DOX.
 - Nunca registrar segredos nem credenciais de serviços externos no repo.
 - Toda task concluída gera memory/<id>.md e sincroniza specs afetadas.
 - Frentes paralelas usam worktrees/branches isoladas; somente o orquestrador valida ownership e integra seus diffs.
