@@ -25,4 +25,3 @@
 
 | Task | Descrição (≤1 linha) | Status |
 |------|----------------------|--------|
-| [[1.2.2-script-vod-fix-faststart]] | Corrige VODs sem faststart (MP4/MKV) com modos interativo, --yes e --dry-run. | concluída |
