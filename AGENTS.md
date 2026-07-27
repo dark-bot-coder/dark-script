@@ -13,7 +13,7 @@
 - **Roadmap geral:** `categories/applications/dark-store/pop/ROADMAP.md` no vault PoP — siga para dependências entre repos e sequência das epochs.
 - **Kanban cross-repo:** categories/applications/dark-store/pop/kanban/ — use somente quando a task afetar mais de um repo.
 
-> Os três itens acima só resolvem com o repo clonado dentro do vault PoP; num clone standalone, ignore esta seção.
+> Os itens acima só resolvem de fora, no escopo que hospeda este repo. **De dentro daqui eles não existem:** este repositório é o escopo inteiro e nada acima da sua raiz faz parte dele (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]). Não siga estes caminhos, não os leia e não relate o que houver neles.
 
 ## Repositório
 
@@ -51,6 +51,6 @@ Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *le
 
 ## Regras essenciais
 
-- Regras transversais do vault (itens `(user)`, merge humano, nada fora de 004, comando explícito, desvio sem kanban, memory e specs antes de fechar, ownership de frentes) valem sem cópia aqui: seção **Regras transversais** do [[WORKFLOW|WORKFLOW]] — *siga ao decidir se pode agir sem gate*.
+- Regras transversais do fluxo (itens `(user)`, merge humano, nada fora de 004, comando explícito, desvio sem kanban, memory e specs antes de fechar, ownership de frentes) valem sem cópia aqui: seção **Regras transversais** do [[WORKFLOW|WORKFLOW]] — *siga ao decidir se pode agir sem gate*.
 - Conteúdo em pt-BR; datas AAAA-MM-DD; wikilinks internos com gatilho nas seções voltadas a agentes.
 - Nunca registrar segredos nem credenciais de serviços externos no repo — os scripts rodam em servidores próprios e falam com a plataforma dark-store.
