@@ -24,3 +24,4 @@ A plataforma Dark Store recebe dados de servidores externos operados por scripts
 ## Decisões
 
 - **2026-07-21:** repo adicionado ao projeto full-multi-repo Dark Store com harness included próprio, ainda sem código além do README.
+- **2026-07-27:** [[notes/decisions/2026-07-27-skills-de-ui-nao-se-aplicam|skills de UI/design/a11y não se aplicam]] — *siga antes de propor instalação de skill de frontend aqui ou de tratar a ausência delas como drift de harness*.

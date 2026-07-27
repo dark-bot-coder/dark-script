@@ -1,9 +1,10 @@
 # Epoch 1 — Gerência de VOD
 
 - **Projeto:** [[PROJECT|Dark Script]] · **Roadmap:** [[ROADMAP|Roadmap]]
-- **Status:** em andamento
+- **Status:** concluída
 - **Descrição:** Preparar a estrutura de pastas de scripts e entregar os primeiros scripts de gerência de VOD.
 - **Yolo:** sim
+- **Encerrada em:** 2026-07-27 — todas as tasks concluídas com memory em `pop/memory/` (`1.1.1`, `1.2.1`, `1.2.2`), `develop` integrado em `main` e kanban vazio.
 
 ## Recon e forks
 
@@ -20,7 +21,7 @@
 
 ## Phase 1.2 — Scripts de VOD
 
-- **Status:** em andamento
+- **Status:** concluída
 - **Descrição:** Entregar os scripts de gerência da biblioteca VOD, começando pelo diagnóstico de compatibilidade com TVs LG.
 
 | Task | Descrição (≤1 linha) | Status |

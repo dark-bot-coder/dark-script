@@ -33,6 +33,7 @@ Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *le
 ## Skills
 
 - **Workflow PoP:** `.agents/skills/` inclui `weekly-review` e `optimize-memory`, além das skills de criação, avanço, specs e crítica yolo.
+- **Sem skills de UI/design/a11y:** decisão registrada em [[notes/decisions/2026-07-27-skills-de-ui-nao-se-aplicam|2026-07-27]] — *siga antes de propor instalar skill de frontend aqui ou de apontar a ausência delas como drift*.
 
 ### Clean code
 
