@@ -10,6 +10,7 @@
 > **Você acusa; quem decide é o juiz.** Não escolha rota, não aprove, não reprove e não escreva a memory da task — acusação não é veredito. Também não conserte o que apontou.
 > Percorra os **dois eixos** e mantenha-os separados: **execução** (critérios do plano re-rodados e qualidade do diff) e **decisão** (ataque às escolhas declaradas na [[<id>-<slug>.defense|defesa]]).
 > Todo item leva severidade, evidência e remédio. Item sem os três é artefato inválido e é reemitido antes de o juiz julgar.
+> **Falha de ambiente não é objeção.** Critério bloqueado por sandbox/infra ou evidência flaky registra `qualified pass (ambiente)` na tabela de critérios e segue para a checklist humana — não vira item de acusação. Critério `verify: user` não se re-roda: registre-o como fora da superfície do agente.
 
 ## Eixo de execução — critérios re-rodados
 

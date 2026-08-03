@@ -34,7 +34,7 @@ Item que passa nas seis é material — e só material vira linha. Objeção des
 
 **Execução primeiro, decisão depois — sempre**, e separados no artefato. Atacar a escolha antes de saber se ela foi sequer executada corretamente produz objeção contra código que não existe.
 
-1. **Eixo de execução.** Re-rode cada critério do plano e registre resultado e evidência; depois percorra o diff integrado **uma vez**, inclusive arquivos fora do `owns` das frentes. **Parada:** todos os critérios com resultado registrado e o diff percorrido uma vez. Sem segunda passada em busca de mais — releitura só do trecho de um item já aberto.
+1. **Eixo de execução.** Re-rode cada critério `verify: agent` do plano e registre resultado e evidência; critério `verify: user` não se re-roda (fora da superfície do agente), e falha de ambiente (sandbox, flakiness) registra `qualified pass (ambiente)` sem virar objeção — vai para a checklist humana. Depois percorra o diff integrado **uma vez**, inclusive arquivos fora do `owns` das frentes. **Parada:** todos os critérios com resultado registrado e o diff percorrido uma vez. Sem segunda passada em busca de mais — releitura só do trecho de um item já aberto.
 2. **Eixo de decisão.** Uma passada pelas decisões da defesa, **na ordem em que ela as lista**. Decisão ausente da defesa não é sua, salvo se contradisser o pedido do card. **Parada:** fim da lista da defesa.
 3. **Orçamento.** As 50 linhas são teto, não cota a preencher. Achou bloqueante num eixo? Pare de catar nits nele — o remédio já devolve a task, e volume não aumenta a força da acusação.
 

@@ -9,6 +9,7 @@
 > **Teto: 40 linhas por rodada** (validado por `pop_validate`). Julgue o que foi acusado; não refaça a revisão inteira.
 > **Você nomeia o delta, não conserta o defeito** — nem aplique a correção, nem a despache a ninguém: gate que encomenda o próprio conserto deixa de ser gate. A correção é do executor relançado pelo orquestrador.
 > Responda **primeiro** se o pedido original — o "O quê / Por quê" do card — foi atendido; só depois julgue as acusações. Aderência ao plano que não atende ao pedido nunca é falha do executor.
+> **Falha de ambiente nunca sustenta bloqueante.** Objeção cujo dano depende de infra que o agente não alcança (sandbox, flakiness) é improcedente como bloqueante: o item vira qualified pass e entra na checklist humana do veredito.
 
 ## Pedido original
 
@@ -25,9 +26,10 @@
 
 ## Veredito
 
-- **Decisão:** aprovada → ato 2 | bloqueante de execução → 004_processing | defeito de plano → 002_planning | circuit breaker.
+- **Decisão:** aprovada → ato 2 | **reparo dirigido** (delta pontual — não é rota nem consome contador; o orquestrador despacha o patch e você o confere em adendo ≤10 linhas nesta rodada; máx. 2 por rodada) | bloqueante de execução → 004_processing | defeito de plano → 002_planning | circuit breaker.
 - **Procedentes bloqueantes:** nenhum | <lista curta>.
 - **Sugestões/nits acolhidos:** <não bloqueiam; registrar só se úteis>.
+- **Checklist humana:** nenhum | <critérios `verify: user` e qualified passes (ambiente), com passo manual e pass esperado>.
 - **Devoluções:** execução 0 | 1 | 2 de 2 · plano 0 | 1 | 2 de 2 — 3ª da mesma rota ativa circuit breaker.
 
 ## Delta da devolução

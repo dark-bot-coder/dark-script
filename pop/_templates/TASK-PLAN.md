@@ -63,11 +63,12 @@ Poucos parágrafos sobre a abordagem base, decisões que restringem a execução
 ## Critérios de aceite
 
 > Critérios observáveis, comparados no gate de `005_closing`. Eles são **o contrato**: valem para o executor e para o gate, e precisam cobrir o "O quê / Por quê" do card — critério que não cobre o pedido é defeito de plano e volta para cá. Prefira o gate agregado. Superfície de runtime exige ao menos um `re-run`.
+> **Todo critério declara quem verifica** (`agent` | `user`). `agent` só quando a verificação roda no alcance do agente — consulte `notes/references/limites-de-verificacao.md` do escopo antes de atribuir; verificação que dependa de infra fora desse alcance nasce `user` e vai para a checklist de verificação humana da entrega, sem bloquear gate. Exigir do agente verificação impossível é defeito de plano.
 > **Append-only entre rodadas:** devolução por `lacuna` acrescenta linha e mantém os IDs existentes — renumerar critério ou frente quebra as referências do `.verify.md` e da telemetria, e força a re-revisão a recomeçar do zero.
 
-| # | Critério | Verificação | Pass é | Modo 005 |
-|---|----------|-------------|--------|----------|
-| 1 | <comportamento ou contrato> | `<comando>` ou leitura de <artefato> | <observação objetiva> | re-run \| evidência |
+| # | Critério | Verifica | Verificação | Pass é | Modo 005 |
+|---|----------|----------|-------------|--------|----------|
+| 1 | <comportamento ou contrato> | agent \| user | `<comando>` ou leitura de <artefato> | <observação objetiva> | re-run \| evidência \| humano |
 
 ## Specs e contratos
 

@@ -30,7 +30,7 @@ Aplique as quatro perguntas. O primeiro "não" torna o item **improcedente**, e 
 1. **A fonte sustenta a afirmação?** Abra o `arquivo:linha` ou o run citado e confira o que ele mostra, não o que a prosa diz que ele mostra. Fonte inexistente, desatualizada ou que não sustenta → improcedente.
 2. **O dano existe no estado integrado?** Um defeito já corrigido em commit posterior, ou que só ocorre em caminho que o código não tem, é improcedente por inexistência.
 3. **O que a objeção cobra foi pedido** pelo card, pelo plano, por uma spec ou por um contrato vigente? Exigência que nasceu no advogado é improcedente — o gate mede a entrega contra o que foi combinado.
-4. **A severidade está calibrada?** Bloqueante exige dano demonstrado, não condicional futuro. Objeção real com rótulo inflado é **procedente com severidade rebaixada** — registre a mudança no motivo; não é improcedência.
+4. **A severidade está calibrada?** Bloqueante exige dano demonstrado, não condicional futuro. Objeção real com rótulo inflado é **procedente com severidade rebaixada** — registre a mudança no motivo; não é improcedência. Dano que depende de infra fora do alcance do agente (sandbox, flakiness) **nunca sustenta bloqueante**: vira qualified pass e entra na checklist humana do veredito.
 
 Só **bloqueante procedente** muda a rota. Sugestão e nit acolhidos entram na linha própria do veredito e não seguram a entrega.
 
@@ -53,6 +53,6 @@ Achado seu, surgido enquanto lia o diff para conferir uma evidência:
 
 ## Veredito, rota e delta
 
-Emita **exatamente uma** das três saídas do template: aprovada → ato 2; bloqueante de execução → `004_processing` (`yolo_005_returns`); defeito de plano → `002_planning` (`yolo_003_returns`) quando os critérios do plano não cobriam o pedido e o executor cumpriu o que recebeu. Duas devoluções por rota; a 3ª da **mesma** rota pede `circuit_breaker: true` e humano.
+Antes de qualquer rota: bloqueante procedente **pontual** (`arquivo:linha` nomeados, remédio objetivo, sem mudança de estratégia) pede **reparo dirigido** — registre o delta, o orquestrador despacha o patch e você o confere em adendo ≤10 linhas nesta mesma rodada; não é rota, não consome contador (máx. 2 por rodada; o 3º vira rota). Para o resto, emita **exatamente uma** das três saídas do template: aprovada → ato 2; bloqueante de execução → `004_processing` (`yolo_005_returns`); defeito de plano → `002_planning` (`yolo_003_returns`) quando os critérios do plano não cobriam o pedido e o executor cumpriu o que recebeu. Duas devoluções por rota; a 3ª da **mesma** rota pede `circuit_breaker: true` e humano — e delta que repete o tema do anterior sem fato novo ativa o breaker antecipado.
 
 Não sendo aprovação, preencha a seção "Delta da devolução" **na forma** de [[_templates/TASK-VERIFY|TASK-VERIFY]] › "Delta da devolução", que é a fonte dos tipos (`lacuna` | `premissa` | `execucao`) e dos campos: siga aquele template em vez de reproduzi-lo, para que mudança lá valha aqui automaticamente. Reprovar sem delta faz o `pop_move` recusar a rota — e o delta é o que faz a devolução custar o tamanho do defeito, nomeando também as **frentes intactas que não devem ser reexecutadas**.
