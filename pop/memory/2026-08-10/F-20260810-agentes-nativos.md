@@ -4,7 +4,7 @@ project: applications/dark-store/dark-script
 started: 2026-08-10
 finished: 2026-08-10
 status: concluída
-commit: pending
+commit: 1fe7f04
 pr:
 authorization: F-20260810-agentes-nativos — manutenção direta do harness solicitada pelo humano
 ---
