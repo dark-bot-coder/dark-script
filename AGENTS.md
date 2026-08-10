@@ -27,6 +27,8 @@ Scripts de organização externa do Dark Store: rodam em servidores próprios e 
 
 Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *leia antes de criar, avançar ou fechar qualquer task deste repo*. Específico daqui:
 
+**Principal delegation-first:** não existe `pop-orchestrator` materializado; o agente principal **sempre delega** a `pop-planner`, `pop-recon`, `pop-execution-orchestrator`, `pop-executor`, `pop-judge-dredd` e `pop-phase-verifier`, salvo execução direta pontual e simples. Cada especialista adquire seu contexto nos paths do envelope, e somente o principal integra os resultados.
+
 - Task de um único repo vive no kanban deste repo (`pop/kanban/`), com uma worktree em `pop/worktrees/<id>/`; task cross-repo vive no kanban da mãe (ver **Parte de**).
 - Yolo é herdado do roadmap/modifications: integra em `develop` e, no fechamento do escopo, abre PR `develop` → `main` (branch de PR na tabela **Repositório**).
 
