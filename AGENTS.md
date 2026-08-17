@@ -11,7 +11,7 @@
 
 - **Projeto-mãe:** Dark Store (`categories/applications/dark-store/pop/PROJECT.md` no vault PoP) — siga para decisões e objetivo transversais.
 - **Roadmap geral:** `categories/applications/dark-store/pop/ROADMAP.md` no vault PoP — siga para dependências entre repos e sequência das epochs.
-- **Kanban cross-repo:** categories/applications/dark-store/pop/kanban/ — use somente quando a task afetar mais de um repo.
+- **Tasks cross-repo:** a mãe não tem kanban central — task que afetar mais de um repo é fatiada por repo, e cada fatia vive no kanban do repo afetado.
 
 > Os itens acima só resolvem de fora, no escopo que hospeda este repo. **De dentro daqui eles não existem:** este repositório é o escopo inteiro e nada acima da sua raiz faz parte dele (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]). Não siga estes caminhos, não os leia e não relate o que houver neles.
 
@@ -29,7 +29,7 @@ Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *le
 
 **Principal delegation-first:** não existe `pop-orchestrator` materializado; o agente principal **sempre delega** a `pop-planner`, `pop-recon`, `pop-execution-orchestrator`, `pop-executor`, `pop-judge-dredd` e `pop-phase-verifier`, salvo execução direta pontual e simples. Cada especialista adquire seu contexto nos paths do envelope, e somente o principal integra os resultados.
 
-- Task de um único repo vive no kanban deste repo (`pop/kanban/`), com uma worktree em `pop/worktrees/<id>/`; task cross-repo vive no kanban da mãe (ver **Parte de**).
+- Task de um único repo vive no kanban deste repo (`pop/kanban/`), com uma worktree em `pop/worktrees/<id>/`; task cross-repo é fatiada por repo, cada fatia no kanban do repo afetado (ver **Parte de**).
 - Yolo é herdado do roadmap/modifications: integra em `develop` e, no fechamento do escopo, abre PR `develop` → `main` (branch de PR na tabela **Repositório**).
 
 ## Skills
@@ -53,6 +53,6 @@ Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *le
 
 ## Regras essenciais
 
-- Regras transversais do fluxo (itens `(user)`, merge humano, nada fora de 004, comando explícito, desvio sem kanban, memory e specs antes de fechar, ownership de frentes) valem sem cópia aqui: seção **Regras transversais** do [[WORKFLOW|WORKFLOW]] — *siga ao decidir se pode agir sem gate*.
+- Regras transversais do fluxo (itens `(user)`, merge humano, nada fora de 004, comando explícito, rota sem kanban com tracking sempre, memory e specs antes de fechar, ownership de frentes) valem sem cópia aqui: seção **Regras transversais** do [[WORKFLOW|WORKFLOW]] — *siga ao decidir se pode agir sem gate*.
 - Conteúdo em pt-BR; datas AAAA-MM-DD; wikilinks internos com gatilho nas seções voltadas a agentes.
 - Nunca registrar segredos nem credenciais de serviços externos no repo — os scripts rodam em servidores próprios e falam com a plataforma dark-store.
