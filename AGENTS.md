@@ -2,15 +2,15 @@
 
 > Projeto gerido pelo workflow do ProjectOfProjects. CLAUDE.md é um symlink deste arquivo — edite sempre este.
 
-- **Type:** included.
+- **Type:** uni-repo.
 - **Idioma do projeto:** pt-BR em documentação, specs, código e comentários.
 - **Ficha:** [[PROJECT|PROJECT]]
 - **Roadmap:** [[ROADMAP|ROADMAP]] · **Modifications:** [[MODIFICATIONS|MODIFICATIONS]] (criado sob demanda — hotfixes e features emergentes pequenas fora do planejamento)
 
 ## Parte de
 
-- **Projeto-mãe:** Dark Store (`categories/applications/dark-store/pop/PROJECT.md` no vault PoP) — siga para decisões e objetivo transversais.
-- **Roadmap geral:** `categories/applications/dark-store/pop/ROADMAP.md` no vault PoP — siga para dependências entre repos e sequência das epochs.
+- **Projeto-mãe:** Dark Store (`projects/dark-store/` no vault PoP — multi-repo; AGENTS.md e INDEX.md na raiz da mãe) — siga para decisões e objetivo transversais.
+- **Roadmap geral:** `projects/dark-store/ROADMAP.md` no vault PoP — siga para dependências entre repos e sequência das epochs.
 - **Tasks cross-repo:** a mãe não tem kanban central — task que afetar mais de um repo é fatiada por repo, e cada fatia vive no kanban do repo afetado.
 
 > Os itens acima só resolvem de fora, no escopo que hospeda este repo. **De dentro daqui eles não existem:** este repositório é o escopo inteiro e nada acima da sua raiz faz parte dele (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]). Não siga estes caminhos, não os leia e não relate o que houver neles.
