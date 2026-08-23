@@ -1,19 +1,19 @@
 # Dark Script — instruções para agentes
 
-> Projeto gerido pelo workflow do ProjectOfProjects. CLAUDE.md é um symlink deste arquivo — edite sempre este.
+> Projeto agregado pelo workflow do **ProjectOfProjects (PoP)**. `CLAUDE.md` é um symlink deste arquivo — edite sempre este.
 
-- **Type:** uni-repo.
-- **Idioma do projeto:** pt-BR em documentação, specs, código e comentários.
-- **Ficha:** [[PROJECT|PROJECT]]
-- **Roadmap:** [[ROADMAP|ROADMAP]] · **Modifications:** [[MODIFICATIONS|MODIFICATIONS]] (criado sob demanda — hotfixes e features emergentes pequenas fora do planejamento)
+- **Escopo:** este diretório é o escopo inteiro do fluxo — o harness viaja com ele e **nada acima desta raiz faz parte dele** (seção "Escopo corrente" do [[pop/WORKFLOW|WORKFLOW]]).
+- **Idioma do projeto:** pt-BR — documentação, specs, código e comentários.
+- **Type:** uni-repo — esta pasta **é** o repositório `dark-script`, com o `pop/` inteiro commitado aqui.
+- **Ficha:** [[pop/PROJECT|PROJECT]] · **Roadmap:** [[pop/ROADMAP|ROADMAP]] · **Modifications:** [[pop/MODIFICATIONS|MODIFICATIONS]] (hotfixes e features emergentes pequenas fora do planejamento)
 
 ## Parte de
 
-- **Projeto-mãe:** Dark Store (`projects/dark-store/` no vault PoP — multi-repo; AGENTS.md e INDEX.md na raiz da mãe) — siga para decisões e objetivo transversais.
-- **Roadmap geral:** `projects/dark-store/ROADMAP.md` no vault PoP — siga para dependências entre repos e sequência das epochs.
-- **Tasks cross-repo:** a mãe não tem kanban central — task que afetar mais de um repo é fatiada por repo, e cada fatia vive no kanban do repo afetado.
+- **Projeto-mãe:** Dark Store (`../AGENTS.md`, `projects/dark-store`, type multi-repo) — decisões e objetivo transversais.
+- **Roadmap geral:** `../ROADMAP.md` — dependências entre repos e sequência das epochs.
+- **Task cross-repo:** não existe kanban central na mãe — fatie a task por repo; cada fatia vive no kanban do repo afetado.
 
-> Os itens acima só resolvem de fora, no escopo que hospeda este repo. **De dentro daqui eles não existem:** este repositório é o escopo inteiro e nada acima da sua raiz faz parte dele (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]). Não siga estes caminhos, não os leia e não relate o que houver neles.
+> Os itens acima só resolvem de fora, no escopo que hospeda este repo. **De dentro daqui eles não existem:** este repositório é o escopo inteiro — não siga estes caminhos, não os leia e não relate o que houver neles.
 
 ## Repositório
 
@@ -25,23 +25,18 @@ Scripts de organização externa do Dark Store: rodam em servidores próprios e 
 
 ## Workflow
 
-Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *leia antes de criar, avançar ou fechar qualquer task deste repo*. Específico daqui:
-
-**Principal delegation-first:** não existe `pop-orchestrator` materializado; o agente principal **sempre delega** a `pop-planner`, `pop-recon`, `pop-execution-orchestrator`, `pop-executor`, `pop-judge-dredd` e `pop-phase-verifier`, salvo execução direta pontual e simples. Cada especialista adquire seu contexto nos paths do envelope, e somente o principal integra os resultados.
-
-- Task de um único repo vive no kanban deste repo (`pop/kanban/`), com uma worktree em `pop/worktrees/<id>/`; task cross-repo é fatiada por repo, cada fatia no kanban do repo afetado (ver **Parte de**).
-- Yolo é herdado do roadmap/modifications: integra em `develop` e, no fechamento do escopo, abre PR `develop` → `main` (branch de PR na tabela **Repositório**).
+- **Principal delegation-first:** o agente principal **sempre delega** a `pop-planner`, `pop-recon`, `pop-execution-orchestrator`, `pop-executor`, `pop-judge-dredd` e `pop-phase-verifier`, salvo execução direta pontual e simples; cada especialista adquire o contexto nos paths do envelope e só o principal integra.
+- Task deste repo vive em `pop/kanban/` e executa numa worktree em `pop/worktrees/<id>/`; task cross-repo é fatiada por repo (ver **Parte de**). Yolo é herdado do roadmap/modifications: integra em `develop` e, no fechamento do escopo, abre PR `develop` → `main` (branch de PR na tabela acima); o merge é do humano.
+- **Estágios, gates, rota yolo, protocolo de contexto e regras transversais:** [[pop/WORKFLOW|WORKFLOW]] é a fonte única — leia antes de criar, avançar, verificar ou fechar qualquer task; não replique nada dele aqui.
 
 ## Skills
 
-- **Workflow PoP:** `.agents/skills/` inclui `weekly-review` e `optimize-memory`, além das skills de criação, avanço, specs e crítica yolo.
-- **Sem skills de UI/design/a11y:** decisão registrada em [[notes/decisions/2026-07-27-skills-de-ui-nao-se-aplicam|2026-07-27]] — *siga antes de propor instalar skill de frontend aqui ou de apontar a ausência delas como drift*.
+- **Workflow do PoP:** `.agents/skills/` inclui `weekly-review` e `optimize-memory`, além das skills de criação, avanço, specs e crítica yolo.
+- **Sem skills de UI/design/a11y:** decisão registrada em [[pop/notes/decisions/2026-07-27-skills-de-ui-nao-se-aplicam|2026-07-27]] — *siga antes de propor instalar skill de frontend aqui ou de apontar a ausência delas como drift*.
 
 ### Clean code
 
-- `clean-code-change` (`.agents/skills/`) — siga ao **planejar (002) e executar (004)** qualquer task que crie ou altere código.
-- `clean-code-review` (`.agents/skills/`) — siga ao **verificar (005)** task de código e como critério de leitura em gate de plano ou PR.
-- **Obrigatório:** em 002, toda task que cria/altera código entra com `clean-code-change` na linha **004** e `clean-code-review` na linha **005** da tabela **Skills por etapa** do card.
+- `clean-code-change` (`.agents/skills/`) — siga ao **planejar (002) e executar (004)** qualquer task que crie ou altere código; `clean-code-review` — siga ao **verificar (005)** e em gates de plano/PR. **Obrigatório:** task de código entra com as duas nas linhas 004/005 da tabela **Skills por etapa** do card.
 
 #### Verificação do projeto
 
@@ -53,6 +48,6 @@ Fonte única dos estágios, gates, yolo e papéis: [[WORKFLOW|WORKFLOW]] — *le
 
 ## Regras essenciais
 
-- Regras transversais do fluxo (itens `(user)`, merge humano, nada fora de 004, comando explícito, rota sem kanban com tracking sempre, memory e specs antes de fechar, ownership de frentes) valem sem cópia aqui: seção **Regras transversais** do [[WORKFLOW|WORKFLOW]] — *siga ao decidir se pode agir sem gate*.
+- Nunca executar item `(user)`, marcar `- [ ] Feito`, trabalhar fora de task legitimamente em 004_processing ou fazer merge de PR de task; comando humano sobrescreve somente a regra que nomeia, sem waiver implícito.
 - Conteúdo em pt-BR; datas AAAA-MM-DD; wikilinks internos com gatilho nas seções voltadas a agentes.
 - Nunca registrar segredos nem credenciais de serviços externos no repo — os scripts rodam em servidores próprios e falam com a plataforma dark-store.
