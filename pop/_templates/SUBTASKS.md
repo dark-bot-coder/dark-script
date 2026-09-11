@@ -1,39 +1,32 @@
-# Frente <F01> — <nome> — [[<id>-<slug>]]
+# Front <F01> — <name> — [[<id>-<slug>]]
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
-> Este arquivo é a **origem substantiva de uma frente**. O `pop-executor` recebe no envelope somente paths e autorização, então adquire daqui sua fatia e das demais origens autorizadas o "O quê/Por quê", objetivo/estratégia e skills. Nunca recebe replay, plano inteiro ou frentes alheias. Teto de 50 linhas.
-> Não descreva código nem microedições.
+> Blockquotes are filling instructions — **delete them when filling**.
+> This file is **one executor's reading slice**: mandatory for every front that goes to a separate context, dispensable only when the task has a single front. Together with the card's What/Why and the plan's objective/strategy, it is *all* that executor receives — never the whole plan, never other fronts. Ceiling of 50 lines (validated by `pop_validate`): if it does not fit, the front is too big and splits in two.
+> Do not describe code or micro-edits.
 
-- **Entrega:** <resultado desta frente>.
-- **Escopo:** <limite funcional>.
-- **Responsável:** agent | user.
-- **Papel:** `pop-executor` | `pop-execution-orchestrator`.
-- **Paths de entrada:** `<card, seções do plano, esta fatia, specs/skills>`.
-- **Owns:** `<arquivos ou padrões que pode alterar>`.
-- **May read:** `<paths autorizados somente para leitura>`.
-- **Must not edit:** `<arquivos, áreas e frentes reservadas>`.
-- **Depends on:** `<Fxx>` | nenhuma.
-- **Entrada esperada:** <contrato/artefato da dependência> | nenhuma.
-- **Skills:** [[pop/skills/<skill>|<skill>]] — *use para <gatilho>*.
-- **Web:** deny | allow read-only oficial (somente exceção cumulativa elegível).
-- **Gate/delta:** <gate aplicável ou paths/frentes da reentrada> | nenhum.
-- **Saída:** <artefato/formato>, teto <N>, evidência <tipo>, status `concluída | BLOCKED`.
-- **Critérios:** <IDs definidos no [[<id>-<slug>.plan|plano]]>.
+- **Delivery:** <result>.
+- **Scope:** <functional boundary>.
+- **Owner:** agent | user.
+- **Owns:** `<files or patterns it may edit>`.
+- **May read:** `<specs, contracts and areas available for consultation>`.
+- **Must not edit:** `<reserved files, areas and fronts>`.
+- **Depends on:** `<Fxx>` | none.
+- **Expected input:** <dependency contract/artifact> | none.
+- **Skills:** [[pop/skills/<skill>|<skill>]] — *use for <trigger>*.
+- **Criteria:** <IDs from the [[<id>-<slug>.plan|plan]]>.
 
-## Contrato de execução
+## Execution contract
 
-- Entregar somente o escopo e os critérios desta frente.
-- **Saber parar:** no máximo 2 tentativas de fazer um critério `agent` passar quando a falha é de ambiente (sandbox, permissão, flakiness); na segunda, registre `ambiente`, reporte a reclassificação para `verify: user` e siga. Nunca construa infraestrutura nova só para verificar.
-- Dependência ou entrada ausente/incompatível → responder `BLOCKED` ao agente principal com evidência.
-- Não implementar, simular ou corrigir dependências por conta própria.
-- Não alterar caminhos fora de `Owns`; necessidade nova volta ao agente principal.
+- Deliver only this front's scope and criteria.
+- **Know when to stop:** at most 2 attempts to make an `agent` criterion pass when the failure is environmental (sandbox, permissions, flakiness); on the second, record `ambiente`, report the reclassification to `verify: user` and move on. Never build new infrastructure just to verify.
+- Missing/incompatible dependency or input → respond `BLOCKED` with evidence.
+- Do not implement, simulate or repair dependencies autonomously.
+- Do not edit paths outside `Owns`; return new needs to the orchestrator.
 
-## Resultado
+## Result
 
-> Preencha ao concluir. Registre resultado e desvios relevantes, não uma narrativa da execução.
-
-- **Status:** concluída | BLOCKED.
-- **Commit/artefato:** <referência>.
-- **Arquivos alterados:** <lista curta, conferida contra `Owns`>.
-- **Desvios:** nenhum | <desvio e autorização do agente principal>.
-- **Evidência:** <gate ou observação relevante>.
+- **Status:** completed | BLOCKED.
+- **Commit/artifact:** <reference>.
+- **Changed files:** <short list checked against `Owns`>.
+- **Divergences:** none | <divergence and orchestrator authorization>.
+- **Evidence:** <relevant gate or observation>.

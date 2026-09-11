@@ -1,44 +1,40 @@
 ---
 name: create-agent-generic
-description: Criar, revisar ou atualizar definições semânticas agent-agnostic dos seis especialistas do PoP e orientar seu consumo por builders futuros. Use quando uma task pedir uma nova fonte genérica de especialista, alterar identidade, gatilhos, aquisição, permissões, I/O, término, ownership, dependências, gates ou denies, ou traduzir essas fontes sem mudar sua semântica.
+description: Create, review, or update the agent-agnostic semantic definitions of PoP's six specialists and guide future builders without imposing a runtime schema.
 ---
 
-# Criar agentes genéricos
+# Create generic agents
 
-Manter uma única fonte autoral por papel em `.agents/agents/`. Tratar esses Markdown como contratos semânticos; artefatos gerados são projeções descartáveis e nunca viram origem.
+Keep one authoring source per role in `.agents/agents/`. These Markdown files are semantic contracts; generated artifacts are disposable projections and never become the source.
 
-## Fluxo
+## Workflow
 
-1. Identificar os papéis pedidos e ler integralmente cada corpo correspondente em `.agents/agents/`.
-2. Ler as origens apontadas no corpo somente quando o gatilho da referência for satisfeito.
-3. Para criação ou atualização, preservar em cada corpo: identidade, gatilho, aquisição por paths, permissões, entrada/saída, término, ownership, dependências, gates/reentrada e denies.
-4. Conferir que o papel adquire conteúdo diretamente nos paths autorizados; não aceitar resumo substantivo como substituto da origem.
-5. Manter o corpo independente de qualquer ferramenta. Decisões específicas do destino pertencem ao builder consumidor.
-6. Comparar os seis corpos por inspeção e reportar paths alterados mais uma matriz curta de cobertura.
+1. Identify the requested roles and read every corresponding body in `.agents/agents/` in full.
+2. Read sources referenced by a body only when the reference trigger applies.
+3. Preserve identity, trigger, path-based acquisition, permissions, input/output, termination, ownership, dependencies, gates/re-entry, and denies.
+4. Require the role to acquire content directly from authorized paths; never accept a substantive summary instead of the source.
+5. Keep bodies tool-independent. Destination-specific decisions belong to the consuming builder.
+6. Inspect all six bodies and report changed paths plus a short coverage matrix.
 
-## Fontes canônicas
+## Canonical sources
 
-- [[.agents/agents/pop-planner|pop-planner]] — leia ao criar ou traduzir o planejador de 002.
-- [[.agents/agents/pop-recon|pop-recon]] — leia ao criar ou traduzir o especialista de reconhecimento delegado.
-- [[.agents/agents/pop-execution-orchestrator|pop-execution-orchestrator]] — leia ao criar ou traduzir o coordenador de frentes em 004.
-- [[.agents/agents/pop-executor|pop-executor]] — leia ao criar ou traduzir quem implementa uma frente em 004.
-- [[.agents/agents/pop-judge-dredd|pop-judge-dredd]] — leia ao criar ou traduzir o juiz dos gates yolo.
-- [[.agents/agents/pop-phase-verifier|pop-phase-verifier]] — leia ao criar ou traduzir o verificador da task final de phase.
+- [[.agents/agents/pop-planner|pop-planner]] — read when creating or translating the 002 planner.
+- [[.agents/agents/pop-recon|pop-recon]] — read when creating or translating delegated reconnaissance.
+- [[.agents/agents/pop-execution-orchestrator|pop-execution-orchestrator]] — read for the 004 front coordinator.
+- [[.agents/agents/pop-executor|pop-executor]] — read for the 004 front executor.
+- [[.agents/agents/pop-judge-dredd|pop-judge-dredd]] — read for the yolo-gate judge.
+- [[.agents/agents/pop-phase-verifier|pop-phase-verifier]] — read for the phase-final verifier.
 
-Não copiar os corpos para esta skill, `references/` ou `assets/`.
+Do not copy the bodies into this skill, `references/`, or `assets/`.
 
-## Criar ou atualizar
+## Create or update
 
-Criar um arquivo por especialista, com nome canônico e seções explícitas. Alterar somente a fonte afetada; se a mudança for compartilhada, aplicar conscientemente aos seis corpos e conferir divergências intencionais. O agente principal não é um papel materializado: segue `AGENTS.md`, delega primeiro e conserva somente roteamento, integração e transições. Rejeitar pedidos que removam separação entre planejamento, execução, julgamento e integração.
+Create one file per specialist with the canonical name and nine explicit sections. The main agent is not materialized: it follows `AGENTS.md`, delegates first, and retains routing, integration, and transitions. Reject changes that collapse separation between planning, execution, judgment, and integration.
 
-Exemplo mínimo: “Atualize `pop-executor` para adquirir um novo contrato.” Ler o corpo, seguir o gatilho do contrato, acrescentar o path autorizado e ajustar I/O ou término apenas se a nova dependência exigir.
+## Consume in a builder
 
-## Consumir em builder futuro
+Read the selected role in full and map every obligation to official destination features. Preserve powers and denies, produce a self-contained artifact, and record capabilities with no equivalent. Never weaken the source to fit a runtime limitation; return `BLOCKED` when that limitation changes semantics.
 
-Ler o corpo inteiro do papel selecionado e mapear cada obrigação para os recursos oficiais da ferramenta de destino. Preservar poderes e denies, produzir artefato autocontido e registrar qualquer capacidade que não tenha equivalência. Não editar a fonte para acomodar limitação do destino.
+## Evidence and stop
 
-Exemplo mínimo: “Prepare a tradução de `pop-planner` para um builder.” Entregar o mapeamento entre as seções do corpo e os campos/capacidades do destino, mantendo a fonte intacta e marcando lacunas como `BLOCKED` quando alterarem a semântica.
-
-## Evidência e parada
-
-Finalizar com `concluída` e evidência por path quando todos os tópicos obrigatórios estiverem cobertos e nenhum deny tiver sido enfraquecido. Finalizar com `BLOCKED` quando faltar origem/dependência, houver incompatibilidade semântica ou a autorização exigir ampliar leitura, escrita ou poderes.
+Finish `completed` with path evidence only when every mandatory topic is covered and no deny was weakened. Finish `BLOCKED` when a source/dependency is absent, semantics are incompatible, or authorization would need broader reading, writing, or powers.

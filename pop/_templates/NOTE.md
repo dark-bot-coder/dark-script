@@ -1,18 +1,18 @@
 ---
 author: agent | user
-created: AAAA-MM-DD
+created: YYYY-MM-DD
 ---
 
-# <título da nota>
+# <note title>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-> Vive em `pop/notes/<categoria>/` (escopo com o harness na própria raiz: sem o prefixo `pop/`): `learnings/` (aprendizados de tasks), `decisions/` (decisões extraídas da ficha), `ideas/` (ideias soltas) ou `references/` (links e materiais externos).
+> Lives in `pop/notes/<category>/` (a scope whose harness lives at its own root: without the `pop/` prefix): `learnings/` (learnings from tasks), `decisions/` (decisions extracted from the profile), `ideas/` (loose ideas) or `references/` (links and external materials).
 
-Conteúdo livre — mas ≤150 linhas e respondendo a **uma** pergunta. Linke a origem (task, spec, conversa): [[<id-da-task>]] · [[pop/specs/<spec>|<spec>]]
+Free-form content — but ≤150 lines and answering **one** question. Link the origin (task, spec, conversation): [[<task-id>]] · [[pop/specs/<spec>|<spec>]]
 
-Learnings linkam **onde se aplicam** (spec, skill, contrato), cada link com gatilho de 1 linha — *quando segui-lo*.
+Learnings link **where they apply** (spec, skill, contract), each link with a 1-line trigger — *when to follow it*.
 
-> Antes de criar: procure nota existente sobre o mesmo tema (grep em `pop/notes/`) — se existir, **atualize-a** em vez de duplicar. Achado que contradiz nota/decisão anterior é registrado, nunca silenciado:
+> Before creating: look for an existing note on the same theme (grep in `pop/notes/`) — if one exists, **update it** instead of duplicating. A finding that contradicts a previous note/decision is recorded, never silenced:
 
-> Contradiz: [[<nota-ou-decisão>]] — <por quê, em 1 linha>.
+> Contradicts: [[<note-or-decision>]] — <why, in 1 line>.

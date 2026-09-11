@@ -1,42 +1,29 @@
 ---
 name: create-agent-opencode
-description: Gerar e validar localmente bundles candidatos dos seis subagents do OpenCode a partir dos contratos em `.agents/agents/`. Use ao projetar model, variant, permission, allowlists de Task/skill e subagent_depth, sem invocar modelos.
+description: Generate and locally validate candidate bundles for PoP's six OpenCode subagents from `.agents/agents/`, without invoking models.
 ---
 
-# Criar agents OpenCode
+# Create OpenCode agents
 
-Tratar `.agents/agents/*.md` como fonte autoral e o bundle gerado como projeção descartável. Usar `pop/scripts/build_agents.py` para manter schema, colisões e escrita reproduzíveis.
+Treat `.agents/agents/*.md` as the authoring source and generated bundles as disposable projections.
 
-## Fluxo
+## Workflow
 
-1. Ler integralmente os seis especialistas e [[.agents/skills/create-agent-generic/SKILL|create-agent-generic]]. O principal segue `AGENTS.md` e não é materializado.
-2. Preparar um perfil fechado como `fixtures/profiles.valid.json`: cada tuple `provider/model` declara variants suportadas e cada papel fixa `mode`, `model`, `variant`, permissions e skills.
-   O OpenCode separa o ID no primeiro `/`: modelos da assinatura Kimi usam `kimi-for-coding/<modelo>`; modelos escolhidos no OpenRouter usam `openrouter/<organização>/<modelo>`. Não copie o slug de catálogo do OpenRouter sem o prefixo do provider OpenCode.
-3. Gerar em uma raiz candidata vazia ou gerida, nunca na raiz ativa nem diretamente em `.opencode/`:
+1. Read all six specialists and [[.agents/skills/create-agent-generic/SKILL|create-agent-generic]] in full. The main session follows `AGENTS.md` and is not materialized.
+2. Use a closed profile like `fixtures/profiles.valid.json`: capabilities declare variants and every role fixes `mode`, `model`, `variant`, permissions, and skills.
+3. Build in an empty candidate root, then validate static bytes, schema, profile, permissions, manifest, complete bodies, and `subagent_depth`.
+4. Materialize only the validated generated files; never hand-edit a generated bundle.
 
-   ```sh
-   python3 .agents/skills/create-agent-opencode/pop/scripts/build_agents.py build \
-     --source-dir .agents/agents \
-     --profiles .agents/skills/create-agent-opencode/fixtures/profiles.valid.json \
-     --destination /tmp/pop-opencode-candidate
-   ```
+OpenCode splits the model ID at the first `/`. Kimi subscription models therefore use `kimi-for-coding/<model>`; OpenRouter models use `openrouter/<organization>/<model>`. Never omit the OpenCode provider prefix.
 
-4. Repetir com `validate-static`. Esse passo prova bytes, schema fechado, corpo integral, tuple, permissions, manifesto e `subagent_depth`.
-5. Materializar os arquivos nos paths autorizados da task. Nunca editar o bundle gerado manualmente.
+## Fail-closed invariants
 
-O builder e seus testes nunca invocam `opencode`, nem mesmo para version, help, list ou discovery. A entrega é a configuração materializada na pasta correspondente.
+- Every role is `subagent`; the native main agent follows `AGENTS.md`.
+- Emit `subagent_depth: 2`; only planner and execution coordinator receive exact child allowlists.
+- Use `permission`, not deprecated `tools`; deny web and external directories and default-deny Task/skill.
+- Do not enable background agents, experimental flags, concurrency promises, or Pi compatibility.
+- Do not invoke `opencode`, a model, session, provider, auth, network, discovery, or diagnostics.
 
-## Invariantes fail-closed
+The declared profiles are: planner/Judge `kimi-for-coding/k3-256k` high; recon `openrouter/qwen/qwen3.5-flash-02-23`; executor `openrouter/qwen/qwen3-coder-next`; execution coordinator and phase verifier `openrouter/deepseek/deepseek-v4-pro` high.
 
-- Preservar no prompt o corpo canônico completo e seus nove tópicos. Enforcement nativo complementa ownership e denies; não os substitui.
-- Aceitar somente `permission`; rejeitar `tools`, campos desconhecidos, model herdado, variant ausente, tuple sem capability, mode divergente e allowlist incompleta.
-- Fixar os seis papéis como `subagent`. O agente principal nativo do OpenCode segue `AGENTS.md`; Task cria child session e `task_id` apenas retoma a mesma filha.
-- Emitir `subagent_depth: 2`: o principal pode lançar especialistas e planner/execution-orchestrator podem declarar seu único tipo de filho. Manter waves/DAG no papel canônico.
-- Negar `webfetch` e `websearch`; negar Task aos não delegadores; exigir allowlists exatas para planner e execution-orchestrator; exigir skill default-deny com entradas explícitas.
-- Não habilitar background subagents, flags experimentais, concorrência ou qualquer compatibilidade Pi.
-- Tratar descoberta apenas como prova local de nomes/modes listados. Model, variant, nesting, permissões e isolamento são declarações do bundle validadas por parser/schema; não executar prompt, modelo, provider, autenticação ou sessão para validá-las.
-- A validação termina em geração determinística, hashes, políticas declaradas e segurança de escrita. Não criar discovery ou probe comportamental nem persistir IDs, credenciais ou evidência de runtime.
-
-## Status
-
-`BLOCKED` é terminal quando faltar capability declarada, origem ou deny representável. Não substituir uma falha local por execução de coding agent ou acesso externo.
+Return `BLOCKED` if a capability, source, or deny cannot be represented. Completion ends at deterministic generation, hashes, declared policies, and safe local writes.

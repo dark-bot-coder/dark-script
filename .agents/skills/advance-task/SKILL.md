@@ -1,61 +1,58 @@
 ---
 name: advance-task
-description: Orquestra o avanço de uma task pelo kanban (001→005_closing), delegando o trabalho de cada estágio a um subagente dedicado e encadeando estágios até o próximo gate humano. Use quando o usuário pedir para avançar, planejar, executar, verificar ou concluir uma task.
+description: Orchestrates a task through kanban 001→005_closing, delegating each stage to the proper fresh context and continuing until a legitimate human gate.
 ---
 
 # advance-task
 
-Você é o **agente principal da sessão**, não um custom agent `pop-orchestrator`: segue `AGENTS.md`, identifica o estágio, resolve gates, transições e integração e **avança até o próximo gate humano**. Opere delegation-first; só faça diretamente ato pontual e simples abaixo do piso e sem separação obrigatória. A fonte de verdade é o [[WORKFLOW|WORKFLOW]]: leia apenas a seção do estágio corrente + Regras transversais.
+You are the **native main session**, not a `pop-orchestrator` custom agent. Follow `AGENTS.md`, resolve routing, gates, transitions and integration, and continue until the next legitimate human gate. Work delegation-first; act directly only on a small/simple operation below the floor with no mandatory context separation. [[WORKFLOW|WORKFLOW]] is authoritative.
 
-**Delegue pelos seis especialistas:** 002 usa `pop-planner`; recon acima do piso usa `pop-recon`; 004 usa `pop-executor` ou, só para DAG/múltiplas skills/write sets, `pop-execution-orchestrator`; gates yolo usam `pop-judge-dredd`; a task final da phase usa `pop-phase-verifier`. O principal executa apenas 001, transições, integração e o fechamento mecânico fora de yolo.
+**Delegate through six specialists:** 002 uses `pop-planner`; recon above the floor uses `pop-recon`; 004 uses `pop-executor` or, only for a DAG/multiple skills/write sets, `pop-execution-orchestrator`; yolo gates use `pop-judge-dredd`; the final phase task uses `pop-phase-verifier`. The main session performs only 001, transitions, integration, and mechanical non-yolo close-out.
 
-## Entrada
+## Input
 
-- **id da task** (ex.: `1.1.1-user-table-creation`, `M-1.1-ajusta-contrato`). Localize a pasta: `find <projeto>/pop/kanban -maxdepth 2 -name "<id>*" -type d` (escopo com o harness na própria raiz: os mesmos caminhos, sem o prefixo `pop/`).
-- **Pedido de alteração sem id/card:** aplique primeiro a **triagem da regra 13** — fix direto (escopo evidente, sem contrato novo, sem planejamento, uma sessão) segue a seção "Fix direto" do [[WORKFLOW|WORKFLOW]] e não entra no kanban; o resto executa `new-task` com o contexto já dado pelo humano e então retoma este loop. Se o humano disse “iniciar o fluxo em yolo”, materialize/libere com `yolo: true` e percorra a rota integral.
+- **Task id:** locate the task folder in the project's kanban.
+- **Change request with no id/card:** apply the **rule-13 triage** first — a direct fix (evident scope, no new contract, no planning, one session) follows the "Direct fix" section of [[WORKFLOW|WORKFLOW]] and does not enter the kanban; everything else runs `new-task` with the context the human already provided, then resumes this loop. If the human said “start the flow in yolo”, materialize/release with `yolo: true` and follow the entire route.
 
-## Loop do orquestrador
+## Loop
 
-0. **Claim primeiro:** `pop/scripts/pop_claim.py <task-id>` — recusou (claim ativo de outro agente)? **Não toque na task**, informe e encerre.
-1. Leia o card: `stage`, `critical`, `yolo`, `size`, `blocked`, `depends_on`, tabela "Skills por etapa". **Task em 001 sem `- [x] Pronto para planejar`?** É gate humano: libere o claim, pare e informe — o card ainda é do humano. Exceções: o humano mandou explicitamente seguir direto nesta conversa → marque o checkbox por ele e registre no Log (`liberada por comando do humano`); `yolo: true` → a marca no roadmap/modifications é a liberação — marque com Log `liberada por yolo`.
-2. Enquanto não houver gate humano pendente:
-   - Leia no [[WORKFLOW|WORKFLOW]] a seção do estágio atual e execute-a — **001** e a entrega/encerramento do `005_closing` você mesmo; **002/004** e o gate yolo de `005_closing` via papel dedicado (abaixo). `size: S` reduz plano, número de executores e profundidade, mas **não muda perfil nem reúne planejador, executor e revisor no mesmo contexto**.
-   - Transição: `pop/scripts/pop_move.py <task-id> <estágio> --reason "motivo curto — contextos: <subagentes lançados no estágio>"` move a pasta, atualiza `stage:`/`updated:` e appenda a linha no Log — atomicamente. Retorno saindo de `005_closing` leva `--return-kind lacuna|premissa` (→002) ou dispensa o flag (→004, `execucao`), gravando a causa no card e na telemetria. **Não** escreva linha manual duplicando a do script (sem o script, faça os três à mão numa linha só).
-3. Ao chegar numa parada legítima, libere o claim e informe. Em yolo, as devoluções reentram automaticamente; só bloqueio técnico, item `(user)` ou `circuit_breaker` param antes do merge final.
+1. Claim first with `pop/scripts/pop_claim.py <task-id>`. A live claim by another agent means read-only: report and stop.
+2. Read `stage`, `critical`, `yolo`, `size`, `blocked`, `depends_on`, and stage skills. In 001, release and stop without `- [x] Ready to plan`, unless an explicit human command or a yolo roadmap mark authorizes it; record that source.
+3. While no legitimate stop exists, run the current [[WORKFLOW|WORKFLOW]] stage — **001** and the delivery/close-out of `005_closing` yourself (they are cheap); **002/004** and the yolo `005_closing` gate through a dedicated subagent. Use `pop/scripts/pop_move.py <task-id> <stage> --reason "..." --context <id>` for transitions; never duplicate its log manually. A return leaving `005_closing` carries `--return-kind lacuna|premissa` (→002) or omits the flag (→004, `execucao`), recording the cause in the card and the telemetry.
+4. Release the claim only at a legitimate stop. Normal yolo returns automatically re-enter the loop.
 
-**Gates humanos fora de yolo:** liberação 001, aprovação 003, item `(user)`, bloqueio e o **merge do PR — que é a verificação**. Não abra revisor agêntico fora de yolo: sem PR (meta PoP local), o gate de qualidade não existe e o `005_closing` segue direto para o encerramento. Em yolo, o 003 só existe para `critical` com `pop-judge-dredd`, e o gate de `005_closing` é o **único gate de qualidade**; o humano só reaparece no circuit breaker/item user/merge final do escopo.
+Outside yolo, human gates are 001 release, 003 approval, `(user)` work, a block, and the **PR merge — which is the verification**. Never open an agentic reviewer outside yolo. In yolo, 003 exists only for `critical: true` (fresh `pop-judge-dredd`) and 005 is the single quality gate.
 
-**Task `yolo: true`:** não crítica → transite 002 → 004 **direto**, sem rodada de aprovação; `critical: true` → 003 com sessão limpa de `pop-judge-dredd`. O gate de `005_closing` usa nova sessão do mesmo papel/perfil fixo e verifica primeiro se o **pedido original** foi atendido; `size`/`critical` alteram só a profundidade. Ele tem **três saídas**: aprovado; bloqueante de execução → 004 (`yolo_005_returns`); defeito de plano → 002 (`yolo_003_returns`). Duas devoluções por rota; a 3ª ativa circuit breaker. Execute waves de até três tasks independentes. A entrega/encerramento é mecânica e idempotente: meta PoP permanece em `main`; externo integra na branch de trabalho corrente (a mesma da worktree) e **sugere** o PR final para `main` — aberto somente a pedido do humano, sem merge do agente.
+`005_closing` is **one stage with three acts, in order**: quality gate, delivery/PR, close-out (memory, spec sync, `pop_roadmap close`, folder deletion). No close-out effect happens before the gate approves.
 
-## Disciplina de turno
+## Yolo execution
 
-"Encadear estágios numa mesma chamada" tem consequências mecânicas — as violações abaixo foram observadas em campo e são **bugs do orquestrador**, não paradas:
+- A non-critical yolo task transits 002 → 004 **directly**, with no approval round — yolo trusts the agent's plan. `critical: true` keeps 003 with a fresh strong session of the [[.agents/skills/judge-dredd/SKILL|judge-dredd]].
+- Two automatic returns per route; the third failure of the **same** route activates `circuit_breaker` and requires human intervention (`yolo_003_returns` for plan, `yolo_005_returns` for execution).
+- Use `pop/scripts/pop_yolo.py wave` to schedule at most three tasks with satisfied dependencies and isolated repositories/write sets. Collisions serialize.
+- A cohesive implementation uses one direct executor with `owns`, denies, and a criterion. Use a sub-orchestrator only for genuine topology.
+- The `005_closing` judge runs in a clean session with the fixed native profile and first checks whether the **original request** was met. `size`/`critical` changes review depth only. It records `differential|full`, reason and surface; `full` is mandatory for critical tasks and after a `premissa` return.
+- The gate has **three exits**: approved; execution blocker → 004 (`yolo_005_returns`, kind `execucao`); plan defect → 002 (`yolo_003_returns`, kind `lacuna` or `premissa`), when the plan's criteria did not cover the card's request and the executor delivered the slice it was given. Every return names a **delta** — type, affected criteria, fronts re-entering, fronts staying intact.
+- Delivery/close-out is mechanical and idempotent: a local scope stays on `main`; external yolo tasks integrate into the current working branch (the same one the worktree started from), then the **marked scope** (single task, phase/epoch or modification) **suggests** the final PR to `main` — opened only on human request, without agent merge.
 
-- **Delegação de estágio é colhida:** tasks independentes da mesma wave podem rodar em paralelo, mas nenhuma task transita antes de seu subagente concluir. “Nenhum concluiu” pede espera, não relatório final; disparar sem colher não executa o estágio.
-- **Nunca encerre o turno com subagente de estágio rodando.**
-- **Teste da última mensagem:** se ela descreve trabalho futuro de responsável `agent` ("vou seguir encadeando…", "a seguir farei…"), o turno **não pode terminar** — execute esse trabalho agora. Encerramentos legítimos: gate humano alcançado (lista abaixo), `blocked: true`, ou escopo yolo fechado (fechamento feito, não prometido).
-- **O loop yolo continua automaticamente:** colha cada contexto, persista a transição e lance a próxima wave elegível; checkpoint entre tasks não é gate humano.
+## Turn discipline
 
-## Subagentes por estágio
+- Independent tasks in a wave may run concurrently, but no task transitions before its stage result is collected.
+- Never end the turn with a stage agent running or with agent-owned future work merely promised.
+- After collecting a wave, persist transitions and launch the next eligible wave until a legitimate stop.
 
-Cada papel delegado recebe um **envelope**, nunca contexto substantivo recontado: `role`, task/estágio/rodada, paths de entrada, `may_read`, `owns`, `must_not_edit`, web/skills, `depends_on`/`expected_input`, gate/delta e saída (artefato/formato, teto, evidência, status). O papel adquire apenas o necessário diretamente nesses paths; origem ou skill ausente/incompatível → `BLOCKED`. Web é deny por padrão. A exceção automática vale só para `pop-executor` em 004 quando as três condições cumulativas de pesquisa oficial estiverem no card; autenticação, escrita, insuficiência oficial ou mistura de escopo bloqueiam. `pop-planner`, `pop-recon`, `pop-execution-orchestrator`, `pop-judge-dredd`, `pop-phase-verifier` e executores de implementação mantêm deny explícito. Perfil nativo é fixo por papel; `size`, `critical` e retornos não selecionam modelo ou effort. Reasoning, prompts e tentativas descartadas são efêmeros:
+## Stage contexts
 
-- **002 — `pop-planner`:** adquire card, pesquisas/specs linkadas e skills pelos paths do envelope; devolve `.plan.md` ≤80 linhas + uma fatia ≤50 por frente separada, com status/evidência. Pode chamar `pop-recon` só para lacuna concreta acima do piso; **0 workers é válido**.
-- **004:** `pop-executor` adquire "O quê/Por quê", objetivo/estratégia, sua única fatia e skills nas origens apontadas. Só topologia complexa recebe `pop-execution-orchestrator`; nenhum deles lê plano inteiro ou frente alheia. O principal valida o resultado contra `owns`/deny antes de integrar.
-- **004 em reentrada:** relance **somente** as frentes do delta do `.verify.md` (fora de yolo, do `.approval.md`), com o delta no prompt — **monte o prompt do executor a partir do marcador `<!-- pop-delta ... -->` e da seção de delta, verbatim**, nunca da sua memória da conversa (compactação de contexto perde o delta; o arquivo não). Frente listada como intacta está aprovada: não relance, não reintegre, e trate diff nela como fora de escopo. Antes de mover de volta a `005_closing`, confira que o diff tocou os `paths` do delta — o `pop_move` recusa reentrada sem trabalho no delta. Reexecutar a task inteira depois de uma devolução estreita é o desperdício que o delta existe para evitar.
-- **`005_closing` (gate, só em yolo):** lance `pop-judge-dredd` em sessão limpa e perfil fixo — um juiz por rodada. Ele adquire card/specs/plano/diff/evidência pelos paths autorizados, escolhe `differential|full`, julga por leitura e devolve `.verify.md` ≤80 linhas com status/evidência; aprovando, escreve a memory. Reparo dirigido: o principal despacha `pop-executor` só com o delta e devolve o patch ao mesmo juiz para adendo ≤10 linhas. Aprovação é terminal. Orçamento de parede: S ~1h, M ~2h, L/critical ~3h; estourou sem aprovação → `blocked: true` com diagnóstico.
-- **003 yolo (só `critical: true`):** `pop-judge-dredd` em sessão limpa assina ou devolve com motivos objetivos. Devoluções 1–2 retornam; a 3ª ativa `circuit_breaker`.
+Every specialist receives an **authorization envelope**, never substantively retold context: role, task/stage/round, source paths, `may_read`, `owns`, `must_not_edit`, web/skills, `depends_on`/`expected_input`, gate/delta, and required output with artifact/format, cap, evidence and status. The specialist acquires only what it needs directly at those paths. An absent/incompatible path or skill returns `BLOCKED`. Native model/effort is fixed by role; size and returns do not select it.
 
-## Telemetria
+- **002 planner:** card + linked research/specs → the plan root (**≤80 lines at any `size`**) with objective, strategy, fronts, dependencies, risks, and criteria, **plus one file in `subtasks/` (≤50 lines) per front that goes to a separate context**; no implementation or chain-of-thought. A plan that doesn't fit **modularizes**, it doesn't compress.
+- **004 executor:** direct for one cohesive front; complex topology gets explicit `owns`, `may_read`, `must_not_edit`, dependencies, expected input, and criteria. Validate scope and the aggregate gate. **Hand over the slice, not the plan:** each executor gets the card's What/Why, the objective and strategy, **its own** front file and that front's skill — never the whole plan nor other fronts.
+- **004 on re-entry:** relaunch **only** the fronts in the `.verify.md` delta (outside yolo, the `.approval.md`), with the delta in the prompt — **build the executor's prompt from the `<!-- pop-delta ... -->` marker and the delta section, verbatim**, never from your memory of the conversation (context compaction loses the delta; the file does not). A front listed as intact is approved: don't relaunch it, don't re-integrate it, and treat a diff in it as out of scope. Before moving back to `005_closing`, check that the diff touched the delta's `paths` — `pop_move` refuses a reentry with no work on the delta. Re-executing the whole task after a narrow return is the waste the delta exists to avoid.
+- **`005_closing` gate (yolo only):** launch `pop-judge-dredd` in a clean session with its fixed native profile—one judge per round. It acquires card/specs/plan/diff/evidence from authorized paths, chooses `differential|full`, judges by reading without rerunning ordinary criteria or suites, and returns `.verify.md` ≤80 lines; on approval it writes memory. The main session dispatches directed repair through `pop-executor`, integrates, and transitions. Approval is terminal.
+- **003 yolo (only `critical: true`):** the strong Judge Dredd signs or returns with objective reasons. Returns 1–2 of each route loop automatically; the third of the same route opens the circuit.
 
-Por estágio, atualize a tabela do card com contextos realmente lançados, contador de devoluções, testes/estratégia e resultado. Não persista reasoning, prompts ou tentativas descartadas.
+Record minimal telemetry per stage: contexts, return count, verification strategy/tests, duration, and result. Never persist prompts, reasoning, or discarded attempts. Missing dependencies, scope violations, or changed contracts return/block; never fill another front opportunistically.
 
-## Cuidados (desta skill; os do fluxo estão nas Regras transversais)
+Never skip stages or gates. Allowed returns: 003→002, 004→002, `005_closing`→004 (execution blocker) and `005_closing`→002 (plan defect) — the orchestrator decides the return; the subagent only reports. **Yolo exception:** a non-critical yolo task transits 002 → 004 directly — that is the flow, not a skip. A learning at close-out **updates the existing note on the same theme** when there is one (don't duplicate); a contradiction with a previous note/decision becomes a visible `> Contradicts: [[target]] — <why>` line.
 
-- **Nunca pule estágios nem gates.** Retornos permitidos: 003→002, 004→002, `005_closing`→004 (bloqueante de execução) e `005_closing`→002 (defeito de plano) — o orquestrador decide o retorno; o subagente só reporta. **Exceção yolo:** task yolo não crítica transita 002 → 004 direto — não é pulo, é o fluxo.
-- **Não infira waiver:** “aplique”, “execute”, “urgente” e “até finalizar” não decidem a triagem por você — ela é da regra 13. “Em yolo” ou item do roadmap/modifications implica kanban por default (avise e siga); fora do kanban, só as rotas fix direto e sem kanban (plan mode) do WORKFLOW, e nenhuma dispensa memory, specs ou DOX.
-- **Claim ativo de outro agente cobre a pasta inteira da task** (card, `.plan.md`, `.verify.md`, `subtasks/`): leitura ok, escrita proibida — o `pop_move` também recusa a transição.
-- Subagente reportou aborto, item `(user)` ou descoberta que muda o plano → pare/retorne conforme o WORKFLOW; **não improvise na janela principal**.
-- Agente de uma frente do 004 encontrou dependência ausente, arquivo fora de `owns` ou contrato incompatível → trate como `BLOCKED`/retorno ao orquestrador de execução; **nunca autorize que complete a frente alheia**.
-- Ao destravar uma task, limpe `blocked:` e `blocked_reason:`.
-- Learning no encerramento **atualiza nota existente do mesmo tema** quando houver (não duplique); contradição com nota/decisão anterior vira linha `> Contradiz: [[alvo]] — <por quê>` visível.
+Never infer a waiver: “apply”, “execute”, “urgent” and “finish it” do not decide the triage for you — it belongs to rule 13. “In yolo” or a roadmap/modifications item implies the kanban by default (warn and proceed); outside the kanban, only the direct-fix and no-kanban (plan mode) routes of the WORKFLOW, and neither waives memory, specs or DOX.

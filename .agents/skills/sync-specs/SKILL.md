@@ -1,38 +1,19 @@
 ---
 name: sync-specs
-description: Fluxo obrigatório de atualização de specs conforme as tasks avançam no kanban - specs nunca podem divergir da realidade do projeto. Use ao planejar (002), executar (004) e concluir (005_closing) tasks, e para auditar specs desatualizadas.
+description: Mandatory spec synchronization as tasks advance; use in 002, 004, 005_closing, and spec-drift audits.
 ---
 
 # sync-specs
 
-**Princípio: a spec descreve o estado atual acordado do projeto. Spec mentindo é bug.** Este fluxo é obrigatório e acompanha os estágios do [[WORKFLOW|WORKFLOW]].
+**A spec describes the agreed current state. A lying spec is a bug.**
 
-**Delegue a subagentes:** a auditoria (listar `005_closing` + ler specs linkadas); os pontos de contato do kanban rodam dentro do subagente da etapa (`advance-task`).
+| Stage | Obligation |
+|---|---|
+| 002 | Identify affected durable contracts. Link existing specs; create canonical `draft/planned` only for a new promise. |
+| 003 | Approval activates proposed drafts; implementation remains evidence-based. |
+| 004 | Record implementation/spec divergence in Open and the card; material contract change returns to 002. |
+| 005_closing | At close-out, in the same wrap-up that writes the memory: reflect delivered reality, resolve relevant questions, and set implementation to partial/implemented/not_applicable. Checking spec impact there is **not optional**. |
 
-## Pontos de contato com o kanban
+Canonical format is [[_templates/SPEC|SPEC]]. `id`, `project`, `domain`, `kind`, `status`, `implementation`, `origin`, dates, `supersedes`, and `superseded_by` are required. A collection opts in atomically with `specs/INDEX.md`; every draft/active spec is reachable directly or through one indexed domain overview. The tree stops at `specs/<domain>/` and supersession links are reciprocal.
 
-| Estágio | Obrigação com as specs |
-|---------|------------------------|
-| 002_planning | O brief identifica contratos duráveis afetados. Linka a spec existente; cria `status: draft` via `write-spec` somente se a entrega introduz comportamento, interface ou invariante ainda sem contrato. Correção interna que restaura contrato existente não duplica spec. Use `implementation: planned` para promessa ainda não entregue e `partial` quando parte do contrato já existe. |
-| 003_human_approval | O `- [x] Feito` aprova também as mudanças de spec propostas no plano: specs afetadas passam de `draft` para `active`; `implementation` continua independente e só muda com evidência da realidade. |
-| 004_processing | Realidade divergiu da spec → registre a divergência na seção "Aberto" da spec e nas notas do card. **Nunca reescreva a spec silenciosamente** — mudança relevante volta para 002. |
-| 005_closing | **No encerramento, na mesma finalização em que a memory é escrita:** atualize cada spec realmente afetada para refletir o entregue — resolva questões pertinentes e ajuste `implementation` para `partial`, `implemented` ou `not_applicable`. Se nenhuma promessa durável mudou, registre isso na memory e não invente atualização. Spec superada → `status: superseded`, com `superseded_by`; a substituta declara o ID antigo em `supersedes`. |
-
-## Formato e descoberta
-
-- O formato canônico é o de [[_templates/SPEC|SPEC]]: `id`, `project`, `domain`, `kind`, `status`, `implementation`, `origin`, `created`, `updated`, `supersedes` e `superseded_by`.
-- Campos e enums permanecem em inglês; conteúdo segue o idioma do projeto. `id` é único na coleção; `project`, `domain` e `id` usam os identificadores definidos pelo projeto.
-- `status` representa maturidade (`draft | active | superseded`); `implementation` representa aderência da realidade (`planned | partial | implemented | not_applicable`).
-- Uma coleção adota o formato quando cria `specs/INDEX.md`; a migração é atômica, sem misturar documentos legados e canônicos.
-- O índice alcança toda spec `draft` ou `active`, diretamente ou por um único `overview.md` de domínio. Overview mapeia propósito, fronteiras e links com gatilho sem repetir contratos filhos; a árvore não passa de `specs/<domain>/`.
-
-## Auditoria (sob demanda ou na weekly-review)
-
-Delegue a um **subagente** (resposta ≤30 linhas): listar as tasks em `pop/kanban/005_closing` e ler as specs (`pop/specs/`) que seus planos linkam (escopo com o harness na própria raiz: os mesmos caminhos, sem o prefixo `pop/`), apontando **(a)** specs `draft`/`active` cuja `implementation` não reflete o entregue → pendência; **(b)** specs `superseded` sem relação recíproca com substituta → violação; **(c)** specs atuais inalcançáveis pelo `INDEX.md` em coleções adotadas → violação. O agente principal só decide o que fazer com a lista.
-
-## Cuidados
-
-- Conferir impacto em specs no encerramento **não é opcional**; editar spec sem mudança de contrato é ruído.
-- Spec guarda comportamento, invariantes, interfaces, erros e critérios duráveis — nunca reasoning, sequência de edição, solução interna contingente, changelog ou lista de tasks entregues. Acontecimento, commit e datas da execução ficam em `memory/`.
-- Divergência descoberta em 004 é informação valiosa: registre antes que se perca, mesmo que a decisão fique para depois.
-- Ao substituir uma spec, atualize as duas pontas de `supersedes`/`superseded_by` e a navegação do índice.
+Audit `005_closing` cards and linked specs for implementation drift, broken reciprocal supersession, and unreachable current specs. A spec stores durable behavior, invariants, interfaces, errors, and criteria—never reasoning, edit sequence, changelog, or completed-task history.

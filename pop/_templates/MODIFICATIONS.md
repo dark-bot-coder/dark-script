@@ -1,17 +1,17 @@
-# Modifications — <Nome do projeto>
+# Modifications — <Project name>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-Ficha: [[pop/PROJECT|<Nome do projeto>]] · Roadmap: [[pop/ROADMAP|Roadmap]]
+Profile: [[pop/PROJECT|<Project name>]] · Roadmap: [[pop/ROADMAP|Roadmap]]
 
-> Tracking do que chega **fora do planejamento**: hotfixes, ajustes pontuais, correções/alterações de contrato e features emergentes pequenas. Uma linha por modification, descrição sempre curta; tasks `M-<n>.<t>-<slug>` ficam no arquivo da modification em `pop/modifications/` quando multi-task ([[_templates/MODIFICATION|template]]; escopo com o harness na própria raiz: sem o prefixo `pop/`). Nunca detalhe aqui.
-> **Antes de tudo, a triagem da regra 13 do [[AGENTS|AGENTS]]:** fix pontual nem vira modification — executa como fix direto e vive só em memory + specs (seção "Fix direto" do [[WORKFLOW|WORKFLOW]]).
-> **Fronteira com o roadmap (3 perguntas):** cabe em ~3 tasks? O "o quê/como" cabe num card, sem entrevista de planejamento? Só toca contratos existentes? Qualquer "não" → roadmap via `plan-roadmap`. Na dúvida, modification. **Só o humano cria modification** (o agente propõe); a `weekly-review` propõe promoção ao roadmap quando uma incha.
-> **Yolo:** só o humano marca — anexe ` · yolo: sim` ao fim da célula Descrição; as tasks herdam, com opt-out/opt-in por task. **Size:** o agente sugere `S|M|L` na Descrição.
-> **Este arquivo é kanban, não histórico:** linha de modification concluída é **removida** na `weekly-review` — nem log fica; o registro durável é memory + specs. As linhas de **task** saem dos arquivos de modification após a memory válida (regra 17 do [[AGENTS|AGENTS]]). Ids `M-<n>` nunca são reutilizados — confira memory e kanban ao propor o próximo.
+> Tracking of whatever arrives **outside the plan**: hotfixes, one-off tweaks, contract fixes/changes and small emergent features. One line per modification, always a short description; `M-<n>.<t>-<slug>` tasks live in the modification's file in `pop/modifications/` when multi-task ([[_templates/MODIFICATION|template]]; a scope whose harness lives at its own root: without the `pop/` prefix). Never add detail here.
+> **Before anything, the rule-13 triage of [[AGENTS|AGENTS]]:** a pinpoint fix does not even become a modification — it runs as a direct fix and lives only in memory + specs ("Direct fix" section of [[WORKFLOW|WORKFLOW]]).
+> **Frontier with the roadmap (3 questions):** does it fit in ~3 tasks? Does the what/how fit in a card, without a planning interview? Does it only touch existing contracts? Any "no" → roadmap via `plan-roadmap`. When in doubt, modification. **Only the human creates a modification** (the agent proposes); the `weekly-review` proposes promotion to the roadmap when one swells.
+> **Yolo:** only the human marks it — append ` · yolo: yes` to the end of the Description cell; tasks inherit, with per-task opt-out/opt-in. **Size:** the agent suggests `S|M|L` in the Description.
+> **This file is a kanban, not a history:** a completed modification's row is **removed** by the `weekly-review` — no log remains; the durable record is memory + specs. **Task** rows leave the modification files after valid memory (rule 17 of [[AGENTS|AGENTS]]). `M-<n>` ids are never reused — check memory and the kanban before proposing the next one.
 
-| # | Modification | Descrição (≤1 linha) | Status |
-|---|--------------|----------------------|--------|
-| M-1 | [[pop/modifications/m-1-<slug>\|<nome>]] (multi-task) ou nome solto (task única) | O que muda e por quê. · size: S | aberta |
+| # | Modification | Description (≤1 line) | Status |
+|---|--------------|-----------------------|--------|
+| M-1 | [[pop/modifications/m-1-<slug>\|<name>]] (multi-task) or loose name (single task) | What changes and why. · size: S | open |
 
-**Status de modification:** aberta | em andamento | concluída
+**Modification status:** open | in progress | completed

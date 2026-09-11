@@ -1,65 +1,57 @@
 ---
-id: <id-unico-em-kebab-case>
-project: <label-do-projeto>
-domain: <dominio-em-kebab-case>
+id: <unique-kebab-case-id>
+project: <project-label>
+domain: <kebab-case-domain>
 kind: contract
 status: draft
 implementation: planned
-origin: "<phase-de-origem>"
-created: AAAA-MM-DD
-updated: AAAA-MM-DD
+origin: "<origin-phase>"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
 supersedes: []
 superseded_by:
 ---
 
-# Spec — <nome do contrato/tema>
+# Spec — <contract/topic>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Delete template instructions when filling. Enums: `kind: contract|overview`; `status: draft|active|superseded`; `implementation: planned|partial|implemented|not_applicable`.
 
-> Campos e enums do frontmatter permanecem em inglês. `kind`: `contract | overview`; `status`: `draft | active | superseded`; `implementation`: `planned | partial | implemented | not_applicable`. `origin` registra a phase de nascimento, não ownership atual. Relações de substituição usam IDs.
+## Contract
 
-## Contrato
+Objective durable behavior. One spec answers one question.
 
-Descrição objetiva do comportamento ou tema durável coberto. Uma spec responde a uma pergunta; se responder a duas, divida-a.
+## Expected behavior
 
-## Comportamento esperado
+- Given <state/input>, when <event>, then <observable result>.
 
-- Dado <estado/entrada>, quando <evento>, então <resultado observável>.
+## Invariants
 
-## Invariantes
-
-- <regra que deve permanecer verdadeira em qualquer implementação>.
+- <rule true under every implementation>.
 
 ## Interfaces
 
-> Registre somente interfaces prometidas a consumidores: payloads, schemas, comandos, eventos, estados ou assinaturas públicas. Código só quando ele próprio for contrato.
+- **Input:** <format and constraints>.
+- **Output:** <format and guarantees>.
+- **Compatibility:** <versions/consumers>.
 
-- **Entrada:** <formato, restrições e exemplo mínimo se necessário>.
-- **Saída:** <formato e garantias>.
-- **Compatibilidade:** <versões ou consumidores afetados>.
+## Errors and limits
 
-## Erros e limites
+- **<condition>:** <observable error/state>.
 
-- **<condição>:** <erro/estado observável e comportamento esperado>.
-- **Limite:** <restrição relevante>.
+## Conformance criteria
 
-## Critérios de conformidade
+- [ ] <objectively verifiable behavior/invariant>.
 
-- [ ] <comportamento ou invariante objetivamente verificável>.
+## Out of scope
 
-## Fora de escopo
+- <excluded area and its contract, if linkable>.
 
-- <o que não pertence a este contrato e onde está coberto, se linkável>.
+## Open questions
 
-## Questões abertas
+- <unanswered question; remove section when empty>.
 
-- <pergunta ainda sem resposta; remova a seção quando vazia>.
+## Related references
 
-## Referências relacionadas
+- [[pop/specs/<spec>|<spec>]] — *follow when <condition>*.
 
-> Cada link leva um gatilho. Em aplicações, inclua contratos DOX relevantes.
-
-- [[pop/specs/<outra-spec>|<outra-spec>]] — *siga se <condição>*.
-- [`<subtree>/AGENTS.md`](../<caminho-no-repo>/AGENTS.md) — *siga antes de alterar <área>*.
-
-> Não registre solução interna, sequência de edição, reasoning, pseudocódigo, changelog ou lista de tasks entregues. Estratégia pertence ao plano; acontecimento, commit e datas de execução pertencem à `memory/`; procedimento reutilizável pertence a uma skill.
+> Never store reasoning, edit sequence, implementation history, or completed-task lists. Strategy belongs in plans; events/commits/dates in memory; reusable procedures in skills.

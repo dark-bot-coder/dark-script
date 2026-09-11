@@ -1,75 +1,75 @@
 ---
 name: weekly-review
-description: Revisão periódica do escopo corrente - varre epochs, modifications e tasks, conserta o harness no que é inequívoco e propõe o resto. Roda sempre fora do kanban e em ondas de subagentes paralelos. Use quando o usuário pedir uma revisão do roadmap ou um panorama do trabalho.
+description: Periodic review of the current scope - sweeps epochs, modifications and tasks, fixes the harness wherever the call is unambiguous and proposes the rest. Always runs outside the kanban and in waves of parallel subagents. Use when the user asks for a roadmap review or an overview of the work.
 ---
 
 # weekly-review
 
-Mede o **escopo corrente**, **conserta** o que é inequívoco e propõe o que exige decisão.
+Measures the **current scope**, **fixes** what is unambiguous and proposes what requires a decision.
 
-**Roda fora do kanban, sempre.** Não crie card, não use `new-task`, não abra branch, worktree ou PR de task, e não mova task alguma. Revisão de harness é manutenção do material que o kanban consulta — submetê-la ao kanban é pedir que o processo se aprove a si mesmo (regra 13 e "Escopo corrente" do [[WORKFLOW|WORKFLOW]]).
+**It always runs outside the kanban.** Do not create a card, do not use `new-task`, do not open a task branch, worktree or PR, and do not move any task. Reviewing harness is maintenance of the material the kanban consults — submitting it to the kanban is asking the process to approve itself (rule 13 and "Current scope" in [[WORKFLOW|WORKFLOW]]).
 
-## Fronteira: o que esta skill conserta
+## The boundary: what this skill fixes
 
-A classe do arquivo decide, nunca o tamanho do achado ("Escopo corrente" › três classes):
+The file's class decides, never the size of the finding ("Current scope" › three classes):
 
-- **Harness gerido** (`WORKFLOW.md`, `_templates/`, `pop/scripts/`, `.agents/skills/`) → **nunca editar**. Defasagem se resolve reinstalando pela origem; a review executa a reinstalação quando ela é o remédio, porque é mecânica e idempotente, e **relata** qualquer outro achado dessa classe.
-- **Harness próprio do escopo** (`AGENTS.md`, `PROJECT.md`, `roadmap/`, `specs/`, `notes/`, `skills/`, `memory/`) → **conserta direto** o que é inequívoco: link morto, referência a estágio inexistente, arquivo acima do teto (fatiar), trecho que pertence a spec/nota/memory, memory fora do layout (via [[.agents/skills/optimize-memory/SKILL|optimize-memory]] no escopo). Toda correção é uma edição pequena e reversível, com o arquivo citado no relatório.
-- **Conteúdo do projeto** (código, manuscrito) → **nunca**, em nenhuma hipótese: só relatar.
+- **Managed harness** (`WORKFLOW.md`, `_templates/`, `pop/scripts/`, `.agents/skills/`) → **never edit it**. Staleness is resolved by reinstalling from the origin; the review performs the reinstall when that is the remedy, because it is mechanical and idempotent, and it **reports** any other finding in this class.
+- **The scope's own harness** (`AGENTS.md`, `PROJECT.md`, `roadmap/`, `specs/`, `notes/`, `skills/`, `memory/`) → **fix directly** whatever is unambiguous: a dead link, a reference to a nonexistent stage, a file over the cap (slice it), a passage that belongs in a spec/note/memory, memory outside the layout (via [[.agents/skills/optimize-memory/SKILL|optimize-memory]] within the scope). Every fix is a small, reversible edit, with the file named in the report.
+- **Project content** (code, manuscript) → **never**, under no circumstances: report only.
 
-**Propor, não consertar**, mesmo dentro do harness próprio, quando a correção **muda sentido**: reescrever contrato de spec, promover modification a epoch, abandonar/pausar epoch, mudar status de projeto, apagar registro. Regra prática: se duas pessoas razoáveis discordariam do resultado, é proposta.
+**Propose, don't fix**, even inside the scope's own harness, when the fix **changes meaning**: rewriting a spec contract, promoting a modification to an epoch, abandoning/pausing an epoch, changing a project's status, deleting a record. Rule of thumb: if two reasonable people would disagree with the outcome, it is a proposal.
 
-**O alvo é sempre o escopo corrente** (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]): a raiz que contém o `AGENTS.md` que você está lendo. "Panorama" nunca significa sair dela. Se existir um `origin-scope.md` ao lado deste arquivo, o escopo hospeda outros e ganha as frentes extras descritas lá; se ele não existir, essas frentes **não se aplicam** — não as procure e não as invente.
+**The target is always the current scope** ("Current scope" section of [[WORKFLOW|WORKFLOW]]): the root holding the `AGENTS.md` you are reading. "Overview" never means leaving it. If an `origin-scope.md` sits next to this file, the scope hosts others and gains the extra fronts described there; if it does not exist, those fronts **do not apply** — do not look for them and do not invent them.
 
-**Delegue em paralelo, obrigatoriamente.** O principal roda os scripts do passo 1, lança as ondas dos passos 2 e 3 e consolida — ele não varre nem conserta à mão. Coleta e correção são **ondas de subagentes paralelos**, e nenhum worker dispara subagentes.
+**Delegate in parallel, mandatorily.** The main agent runs step 1's scripts, launches the waves of steps 2 and 3 and consolidates — it never sweeps or fixes by hand. Collection and correction are **waves of parallel subagents**, and no worker spawns subagents.
 
-## Procedimento
+## Procedure
 
-1. **Scripts primeiro:** rode `pop/scripts/pop_status.py` (panorama do kanban: tasks por estágio/projeto, bloqueadas, gates pendentes — 003, revisão/humano em 005, `awaiting_merge`, paradas há >14 dias) e `pop/scripts/pop_validate.py` (violações de limites, frontmatter, `stage` vs pasta; avisos: worktrees órfãs, wikilinks quebrados). O INBOX.md é Dataview, não fonte.
-   **Versão do harness:** `python3 pop/scripts/pop_install_unirepo.py --check-fresh .` responde a versão instalada aqui. Comparar com a origem é responsabilidade de quem instalou — não é achado desta revisão e não justifica procurar a origem.
-2. **O que os scripts não cobrem → subagentes paralelos**, um por frente, em **ondas de 3-5**, cada um com pergunta específica e resposta ≤30 linhas com **fonte por achado** e seção "Lacunas / Não encontrado" (workers não disparam subagentes):
-   - **Arquivos base:** meça `AGENTS.md` e `pop/PROJECT.md` contra o teto de **~60 linhas** do AGENTS.md. Em aplicação, **desconte o bloco DOX e meça o resto** — o `pop_validate` já reporta esse número como aviso, e ele é o alvo: isenção que desliga a medição esconde dívida. Classifique cada trecho excedente por **destino**, usando o "o que não entra" de [[_templates/AGENTS-PROJECT|AGENTS-PROJECT]] como critério: narrativa do fluxo → **ponteiro com gatilho** para o [[WORKFLOW|WORKFLOW]]; contrato, invariante ou interface durável → linha em spec; razão de uma escolha → nota em `notes/decisions/`; acontecimento → já está em `memory/`. Sintoma barato: referência a estágio inexistente (`005_verifying`, `006_done`) — `grep` prova que o texto duplicado apodreceu. **Substituição por ponteiro e correção de referência podre são conserto** (harness próprio); mover texto para uma spec que passa a prometer coisa nova é proposta.
-   - **Worktrees órfãs:** `pop/worktrees/` com conteúdo cuja task não está em `004`/`005_closing` aguardando merge.
-   - **Specs desatualizadas:** a auditoria da skill `sync-specs` (tasks em done cujas specs não foram atualizadas).
-   - **Auditoria DOX:** em aplicação com árvore DOX ([[_templates/DOX|template]]), contratos obsoletos (propósito/estrutura/fluxo mudou sem atualização), links mortos e tetos estourados (~60 linhas, ~3 laterais, <7 referências por contrato).
-   - **Saúde das notas:** notas órfãs (nenhum wikilink de entrada no escopo) e contradições entre notas/decisões e specs — resposta ≤15 linhas: candidatas a linkar, fundir ou marcar com `> Contradiz:`.
-   - **Saúde de memories, roadmap e modifications:** resíduos de tasks concluídas acusados por `pop_validate`; memory ainda plana fora de pasta de data, ledger >1200 ou entrada >800 caracteres, entrada sem evidência, pasta que não é data dentro de `memory/` (backup de conversão mora **fora** de `memory/`). A frente **mede e lista os arquivos**; o conserto é a [[.agents/skills/optimize-memory/SKILL|optimize-memory]], acionada no passo 3 com esse escopo — ela é quem sabe preservar prova, e nenhum worker de coleta converte memory por conta própria. Resíduo de roadmap/modifications de task já concluída é conserto direto (remover a linha), e **modification concluída é conserto direto: remover a linha inteira do MODIFICATIONS.md — nem log fica, o registro durável é memory + specs** (confira antes que cada task dela tem ledger); status de epoch/modification ainda aberta é proposta.
-   - **Epochs paradas:** condições "Abandonar/pausar se" atingidas nos arquivos de epoch; Epoch 1 (Organização) ainda aberta — desde quando e o que falta para liberar o gate.
-   - **Modifications inchadas:** modification com mais de ~3 tasks abertas ou aberta há muito tempo → proposta de promoção a phase/epoch do roadmap via `plan-roadmap` (tasks abertas concluem como `M-`; só o trabalho ainda não taskado migra — fronteira no [[AGENTS|AGENTS]]).
-   - **Dívida datada do gate adversarial:** a cláusula "Transição — card anterior ao gate" do ato 1 do `005_closing` ([[WORKFLOW|WORKFLOW]]) e a constante `GATE_ADVERSARIAL_SINCE` que a implementa no validador existem **só** para cards que passaram por 002 antes de o gate vigorar — são dívida, não regra permanente. Meça com um comando, não por impressão:
+1. **Scripts first:** run `pop/scripts/pop_status.py` (kanban overview, blocked tasks, pending gates — 003, review/human in `005_closing`, `awaiting_merge`, >14 days) and `pop/scripts/pop_validate.py` (limits, frontmatter and warnings). INBOX.md is Dataview, not a source.
+   **Harness version:** `python3 pop/scripts/pop_install_unirepo.py --check-fresh .` reports the version installed here. Comparing it against the origin is the job of whoever installed it — it is not a finding of this review and it never justifies going looking for the origin.
+2. **What the scripts don't cover → parallel subagents**, one per front, in **waves of 3-5**, each with a specific question and an answer ≤30 lines with a **source per finding** and a "Gaps / Not found" section (workers spawn no subagents):
+   - **Base files:** measure `AGENTS.md` and `pop/PROJECT.md` against the **~60 line** cap for the project AGENTS.md. In an application, **discount the DOX block and measure the rest** — `pop_validate` already reports that number as a warning, and it is the target: an exemption that switches the measurement off hides debt. Classify every excess passage by **destination**, using the "what must not go in" of [[_templates/AGENTS-PROJECT|AGENTS-PROJECT]] as the criterion: flow narration → a **triggered pointer** to [[WORKFLOW|WORKFLOW]]; a contract, invariant or durable interface → a line in a spec; the reason for a choice → a note in `notes/decisions/`; an event → it already lives in `memory/`. A cheap symptom: a reference to a nonexistent stage (`005_verifying`, `006_done`) — `grep` proves the duplicated text rotted. **Replacing a passage with a pointer and fixing a rotten reference are fixes** (the scope's own harness); moving text into a spec that then promises something new is a proposal.
+   - **Orphaned worktrees:** `pop/worktrees/` with content whose task is not in `004`/`005_closing` awaiting merge.
+   - **Outdated specs:** the `sync-specs` skill's audit (tasks in done whose specs weren't updated).
+   - **DOX audit:** in an application with a DOX tree ([[_templates/DOX|template]]), obsolete contracts (purpose/structure/flow changed without an update), dead links and blown caps (~60 lines, ~3 laterals, <7 references per contract).
+   - **Note health:** orphan notes (no inbound wikilinks in the scope) and contradictions between notes/decisions and specs — reply ≤15 lines: candidates to link, merge or mark with `> Contradicts:`.
+   - **Memory, roadmap and modifications health:** completed-task residue reported by `pop_validate`; memory still flat outside a date folder, a ledger over 1200 or an entry over 800 characters, an entry with no evidence, a folder inside `memory/` that is not a date (a conversion backup lives **outside** `memory/`). This front **measures and lists the files**; the fix is [[.agents/skills/optimize-memory/SKILL|optimize-memory]], invoked in step 3 with that scope — it is the one that knows how to preserve proof, and no collection worker converts memory on its own. Residue in the roadmap/modifications of an already-completed task is a direct fix (remove the row), and **a completed modification is a direct fix: remove its whole row from MODIFICATIONS.md — no log remains, the durable record is memory + specs** (check first that each of its tasks has a ledger); the status of a still-open epoch/modification is a proposal.
+   - **Stalled epochs:** "Abandon/pause if" conditions met in the epoch files; Epoch 1 (Organization) still open — since when and what is missing to release the gate.
+   - **Dated debt of the adversarial gate:** the "Transition — a card older than the gate" clause of act 1 of `005_closing` ([[WORKFLOW|WORKFLOW]]) and the `GATE_ADVERSARIAL_SINCE` constant that implements it in the validator exist **only** for cards that went through 002 before the gate came into force — they are debt, not a permanent rule. Measure with a command, not by impression:
      ```sh
      CUT=$(grep -hoE 'GATE_ADVERSARIAL_SINCE = "[0-9]{4}-[0-9]{2}-[0-9]{2}"' \
        pop/scripts/pop_validate.py pop/scripts/pop_validate.py 2>/dev/null \
        | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | head -1)
      case "$CUT" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) CUT= ;; esac
      if [ -z "$CUT" ]; then
-       echo 'ERRO: data de corte não encontrada — dívida NÃO pode ser removida' >&2
+       echo 'ERROR: cut-off date not found — the debt CANNOT be removed' >&2
        false
      else
        grep -rH '^created:' kanban pop/kanban 2>/dev/null \
          | awk -F'created: ' -v c="$CUT" 'NF>1 && $2 < c {sub(/:$/,"",$1); print $1}'
      fi
      ```
-     O comando cobre as duas anatomias (harness na própria raiz e em `pop/`) e **falha fechado**: sem constante legível ele imprime o erro e sai com status ≠ 0, sem chegar ao `awk`.
-     **Gatilho de remoção:** saída vazia **e** status de saída zero — erro nunca é gatilho, e saída vazia com status ≠ 0 significa que a medição não aconteceu. Com o comando bem-sucedido, saída vazia é nenhum card pré-corte em nenhum estágio do kanban e nenhuma task em voo com `created:` anterior ao corte. Aí a frente propõe a remoção **conjunta**: cláusula no [[WORKFLOW|WORKFLOW]], ressalva na spec do gate, constante e isenção no validador, e os testes que as cobrem. Remoção parcial é pior que nenhuma — a proposta é sempre do conjunto. Enquanto houver card pré-corte, a frente só reporta quantos e quais, e não propõe nada.
-   - **Yolo órfão:** branches de trabalho de escopo yolo que parou (tasks bloqueadas ou escopo concluído sem o PR final — que o agente só sugere e abre a pedido do humano — seção Yolo mode do [[WORKFLOW|WORKFLOW]]). Escopo local é isento: entrega direto em `main`.
-3. **Onda de correção → subagentes paralelos, um por grupo de arquivos.** Com os achados na mão, o principal separa o que a fronteira acima classifica como **conserto** e distribui:
-   - **Write sets disjuntos são pré-requisito do paralelismo.** Dois workers nunca recebem o mesmo arquivo; achados que tocam o mesmo arquivo viram **um** worker. Sem isso, a correção se sobrescreve e o ganho de paralelismo vira retrabalho.
-   - Cada worker recebe: os achados dele com caminho e linha, o destino de cada trecho, o teto do arquivo, a fronteira "não faça X" (nada de conteúdo, nada de harness gerido, nada que mude sentido) e a ordem de devolver a lista do que editou. Worker não decide reclassificar achado: o que não couber na instrução volta como proposta.
-   - **Reinstalação e `optimize-memory` são workers desta onda**, cada um com o seu escopo — não tarefas do principal.
-   - O principal **valida antes de fechar**: `pop_validate` no escopo corrente e leitura do diff arquivo a arquivo. Correção que introduza violação é revertida e reclassificada como proposta.
-4. **Consolide:** o principal monta o relatório a partir dos scripts e das respostas dos workers. Escreva-o em `pop/notes/` do escopo corrente (`notes/` quando o harness mora na própria raiz), com:
-   - **Aguardando você**: gates humanos pendentes e questões `aberta` em `open_questions/`, com link e desde quando.
-   - **Ajustado nesta revisão**: cada arquivo corrigido, o que mudou em uma linha e a classe que autorizou o conserto. Seção vazia é resposta legítima.
-   - **Parado**: tasks sem movimento, com sugestão (retomar, pausar, abandonar) e justificativa de uma linha.
-   - **Progresso**: o que andou desde a última revisão (compare com o relatório anterior, se existir).
-   - **Propostas**: o que exige decisão — promoções de ideias a epoch, epochs concluíveis, modifications a promover ao roadmap, reescrita de contrato, ajustes de prioridade.
-5. Linke o relatório no INBOX.md (seção "Revisões") para o humano encontrar, e commite as correções junto com ele (regra 15) — um commit de revisão, mensagem dizendo que é manutenção de harness.
+     The command covers both anatomies (harness at the root itself and in `pop/`) and **fails closed**: with no readable constant it prints the error and exits with a non-zero status, never reaching the `awk`.
+     **Removal trigger:** empty output **and** a zero exit status — an error is never a trigger, and empty output with a non-zero status means the measurement did not happen. With the command successful, empty output means no pre-cut-off card in any kanban stage and no in-flight task with a `created:` earlier than the cut-off. Then the front proposes the **joint** removal: the clause in [[WORKFLOW|WORKFLOW]], the caveat in the gate spec, the constant and the exemption in the validator, and the tests that cover them. A partial removal is worse than none — the proposal is always of the whole set. While a pre-cut-off card exists, the front only reports how many and which, and proposes nothing.
+   - **Swollen modifications:** a modification with more than ~3 open tasks or open for too long → proposal of promotion to a roadmap phase/epoch via `plan-roadmap` (open tasks conclude as `M-`; only the not-yet-tasked work migrates — frontier in [[AGENTS|AGENTS]]).
+   - **Orphaned yolo:** external working branches whose yolo scope stalled (blocked tasks or a scope closed without the final PR — which the agent only suggests and opens on human request). A local scope is exempt because it delivers directly to `main`.
+3. **Correction wave → parallel subagents, one per group of files.** With the findings in hand, the main agent separates whatever the boundary above classifies as a **fix** and distributes it:
+   - **Disjoint write sets are a prerequisite for the parallelism.** Two workers never receive the same file; findings that touch the same file become **one** worker. Without this, the corrections overwrite each other and the parallel gain turns into rework.
+   - Each worker receives: its findings with path and line, the destination of each passage, the file's cap, the "do not do X" boundary (no content, no managed harness, nothing that changes meaning) and the order to return the list of what it edited. A worker never reclassifies a finding: whatever does not fit the instruction comes back as a proposal.
+   - **The reinstall and `optimize-memory` are workers of this wave**, each with its own scope — not chores of the main agent.
+   - The main agent **validates before closing**: `pop_validate` on the current scope and a file-by-file read of the diff. A fix that introduces a violation is reverted and reclassified as a proposal.
+4. **Consolidate:** the main agent assembles the report from the scripts and the workers' answers. Write it in the current scope's `pop/notes/` (`notes/` when the harness lives at the root itself), with:
+   - **Waiting on you**: pending human gates and `open` questions in `open_questions/`, with link and since when.
+   - **Adjusted in this review**: each corrected file, what changed in one line, and the class that authorized the fix. An empty section is a legitimate answer.
+   - **Stalled**: tasks without movement, with a suggestion (resume, pause, abandon) and a one-line justification.
+   - **Progress**: what moved since the last review (compare with the previous report, if any).
+   - **Proposals**: whatever requires a decision — promotions of ideas to epoch, epochs ready to complete, modifications to promote to the roadmap, contract rewrites, priority adjustments.
+5. Link the report in INBOX.md ("Reviews" section) so the human can find it, and commit the corrections alongside it (rule 15) — one review commit, with a message saying it is harness maintenance.
 
-## Cuidados
+## Cautions
 
-- Relatório ≤150 linhas; detalhe extra vira nota linkada.
-- **Nunca mova task, mude `stage`, mexa em card ou toque conteúdo de projeto** — nem para "arrumar". Esses são do kanban, e a review não é do kanban.
-- Conserto sem achado medido não existe: cada edição desta skill aponta para uma linha do relatório e para o script ou worker que a encontrou.
-- Remova relatórios de revisão com mais de 3 meses (ou mova para uma pasta de arquivo) ao criar um novo.
-- Achado que só existiria fora do escopo não entra no relatório: vira questão em `open_questions/` ou não existe.
+- Report ≤150 lines; extra detail becomes a linked note.
+- **Never move a task, change a `stage`, touch a card or touch project content** — not even to "tidy up". Those belong to the kanban, and the review is not of the kanban.
+- A fix with no measured finding does not exist: every edit by this skill points to a line of the report and to the script or worker that found it.
+- Remove review reports older than 3 months (or move them to an archive folder) when creating a new one.
+- A finding that could only exist outside the scope does not enter the report: it becomes a question in `open_questions/`, or it does not exist.

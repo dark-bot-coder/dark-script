@@ -1,99 +1,97 @@
 ---
 name: run-cursor-agent
-description: Invoca o Cursor CLI (cursor-agent) como executor headless de tarefas de código (-p --force, sessões por UUID, modelos, saída JSON). Use quando for delegar trabalho de código ao Cursor via CLI - contrato geral e escolha de ferramenta na skill delegate-coding.
+description: Invokes the Cursor CLI (cursor-agent) as a headless executor of coding tasks (-p --force, sessions by UUID, models, JSON output). Use when delegating coding work to Cursor via CLI - general contract and tool choice in the delegate-coding skill.
 ---
 
 # run-cursor-agent
 
-Contrato, regras de yolo/auth e checklist: skill `delegate-coding` — leia antes da primeira delegação. Antes da primeira invocação na máquina, confirme as flags com `cursor-agent --help` — versões divergem (fonte é de meados de 2026).
+Contract, yolo/auth rules and checklist: skill `delegate-coding` — read it before the first delegation. Before the first invocation on the machine, confirm the flags with `cursor-agent --help` — versions diverge (the source is from mid-2026).
 
-## Invocação headless
+## Headless invocation
 
 ```bash
-timeout 600 cursor-agent -p --force --output-format json "task escopada"
+timeout 600 cursor-agent -p --force --output-format json "scoped task"
 ```
 
-- `-p`/`--print`: modo headless. O prompt é argumento posicional e vem **depois** das flags.
-- Sem `--force` o agente é read-only; `--force` (alias `--yolo`) libera edições e comandos.
-- Aceita pipe: `git diff | cursor-agent -p "revise este diff"`.
-- Referencie arquivos direto no prompt (caminhos relativos/absolutos; imagens inclusive).
+- `-p`/`--print`: headless mode. The prompt is a positional argument and comes **after** the flags.
+- Without `--force` the agent is read-only; `--force` (alias `--yolo`) unlocks edits and commands.
+- Accepts pipe: `git diff | cursor-agent -p "review this diff"`.
+- Reference files directly in the prompt (relative/absolute paths; images included).
 
-## Saída e parsing
+## Output and parsing
 
-- `--output-format text|json|stream-json`. O JSON traz `result`, `files_modified`, `summary`.
-- `stream-json` é NDJSON de eventos (`system`, `assistant`, `tool_call`, `tool_result`, `result`, `error`); some `--stream-partial-output` para deltas de texto. Útil também para detectar conclusão quando o processo trava (ver Pegadinhas).
+- `--output-format text|json|stream-json`. The JSON carries `result`, `files_modified`, `summary`.
+- `stream-json` is NDJSON of events (`system`, `assistant`, `tool_call`, `tool_result`, `result`, `error`); add `--stream-partial-output` for text deltas. Also useful for detecting completion when the process hangs (see Gotchas).
 
 ```bash
 cursor-agent -p --force --output-format json "..." | jq -r '.result, .summary'
 ```
 
-## Sessões
+## Sessions
 
-- `cursor-agent ls` lista; `cursor-agent resume` retoma a última; `--resume <uuid>` retoma específica; `--continue` continua a anterior.
-- `create-chat` cria sessão vazia e retorna o ID.
-- **`-n/--name` é só rótulo de exibição — retomar exige o UUID.** Capture o id na criação.
-- `--cloud`/`-c` faz handoff para a nuvem (continua após fechar o terminal).
-- Boa prática da fonte: uma task = uma sessão; prefira prompts discretos a um `--continue` longo.
+- `cursor-agent ls` lists; `cursor-agent resume` resumes the last one; `--resume <uuid>` resumes a specific one; `--continue` continues the previous one.
+- `create-chat` creates an empty session and returns the ID.
+- **`-n/--name` is only a display label — resuming requires the UUID.** Capture the id at creation.
+- `--cloud`/`-c` hands off to the cloud (continues after closing the terminal).
+- Best practice from the source: one task = one session; prefer discrete prompts over one long `--continue`.
 
 ## Yolo mode
 
-`--force` — é o modo padrão desta família de skills (decisão de 2026-07-12); o controle vem do orquestrador (worktree isolada, prompt escopado, timeout). Com MCP, some `--trust --approve-mcps`. `--sandbox enabled|disabled` existe, mas `.cursor/sandbox.json` é ignorado em headless (bug na fonte) — não confie nele.
+`--force` — it is this skill family's default mode (decision of 2026-07-12); control comes from the orchestrator (isolated worktree, scoped prompt, timeout). With MCP, add `--trust --approve-mcps`. `--sandbox enabled|disabled` exists, but `.cursor/sandbox.json` is ignored in headless (bug in the source) — don't rely on it.
 
-## Agentes específicos
+## Specific agents
 
-- Modos de execução: `--mode agent|plan|ask` (`plan` = read-only, `ask` = Q&A sem edições) — sem uso normal aqui, dado o contrato yolo, mas úteis para reconhecimento.
-- Regras de projeto: `.cursor/rules/` (crie com `cursor-agent generate-rule`); não há flag de system prompt dedicado — contexto vai no prompt ou nas rules.
-- Subagentes **não herdam o modelo** e caem em `composer-1.5` — sem fix confiável; evite depender deles.
+- Execution modes: `--mode agent|plan|ask` (`plan` = read-only, `ask` = Q&A without edits) — no normal use here, given the yolo contract, but useful for recon.
+- Project rules: `.cursor/rules/` (create with `cursor-agent generate-rule`); there is no dedicated system prompt flag — context goes in the prompt or in the rules.
+- Subagents **do not inherit the model** and fall back to `composer-1.5` — no reliable fix; avoid relying on them.
 
-## Modelo
+## Model
 
-- `--model/-m <id>`; liste com `cursor-agent models` ou `--list-models`.
-- **`--model default`/`auto` falha em alguns planos — sempre especifique** (ex.: `composer-2`, `claude-sonnet-4.6`, `gpt-5.4-low`, `gemini-3.1-pro`).
-- **Qual modelo:** o perfil explícito da invocação; `size`, `critical` e retornos não mudam modelo ou effort.
+- `--model/-m <id>`; list with `cursor-agent models` or `--list-models`.
+- **`--model default`/`auto` fails on some plans — always specify** (e.g. `composer-2`, `claude-sonnet-4.6`, `gpt-5.4-low`, `gemini-3.1-pro`).
 
 ## MCP
 
-- Config em `.cursor/mcp.json` (projeto) ou `~/.cursor/mcp.json` (global), bloco `mcpServers` com `command/args/env`; interpolação `${env:NAME}`, `${workspaceFolder}` etc.
-- Em headless/CI o MCP só é reconhecido com `--trust --approve-mcps`.
+- Config in `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global), `mcpServers` block with `command/args/env`; interpolation `${env:NAME}`, `${workspaceFolder}` etc.
+- In headless/CI, MCP is only recognized with `--trust --approve-mcps`.
 - `cursor-agent mcp list`, `mcp list-tools <id>`, `mcp enable/disable <id>`.
 
-## Contexto e diretórios
+## Context and directories
 
-- `--workspace <dir>` define o diretório de trabalho.
-- Worktree git isolada pronta na flag: `-w/--worktree "nome"` + `--worktree-base <branch>` (`--skip-worktree-setup` pula o `.cursor/worktrees.json`).
-- Qualidade de contexto cai perto de 80-90% da capacidade — prompts escopados, não despejo de repositório.
+- `--workspace <dir>` sets the working directory.
+- Ready-made isolated git worktree via flag: `-w/--worktree "name"` + `--worktree-base <branch>` (`--skip-worktree-setup` skips the `.cursor/worktrees.json`).
+- Context quality drops near 80-90% of capacity — scoped prompts, not a repository dump.
 
 ## Auth
 
-Pré-condição: já logado (ou `CURSOR_API_KEY` no ambiente). **Não configure login nesta skill.** Se a saída mencionar credencial/API key/login/401: **aborte a task inteira do orquestrador** — sem retry, sem fallback; falha imediata **sem** sinal de auth é erro de invocação, não de login (regra 2 do `delegate-coding`).
+Precondition: already logged in (or `CURSOR_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/login/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`).
 
-## Pegadinhas
+## Gotchas
 
-- **Pode travar sem sair ao terminar** — `timeout <s>` é obrigatório em toda invocação; para monitorar, use `stream-json` e detecte o evento `result`.
-- MCP "não configurado" em CI → faltou `--trust --approve-mcps`.
-- Nome de sessão não retoma; só UUID.
-- Subagentes degradam para `composer-1.5`.
+- **It may hang without exiting when done** — `timeout <s>` is mandatory in every invocation; to monitor, use `stream-json` and detect the `result` event.
+- MCP "not configured" in CI → missing `--trust --approve-mcps`.
+- A session name doesn't resume; only the UUID.
+- Subagents degrade to `composer-1.5`.
 
-## Receitas
+## Recipes
 
 ```bash
-# Edição direta com saída JSON
+# Direct editing with JSON output
 timeout 600 cursor-agent -p --force --output-format json --model composer-2 \
-  "Adicione testes para src/utils.ts; rode-os; não toque em outros módulos"
+  "Add tests for src/utils.ts; run them; don't touch other modules"
 
-# Stream para acompanhar progresso e detectar conclusão
+# Stream to track progress and detect completion
 timeout 900 cursor-agent -p --force --output-format stream-json --stream-partial-output \
-  "Analise o projeto e gere relatório em REPORT.md"
+  "Analyze the project and generate a report in REPORT.md"
 
-# Em worktree isolada própria
+# In its own isolated worktree
 timeout 900 cursor-agent -p --force -w "task-fix-login" --worktree-base main \
-  --model claude-sonnet-4.6 "Corrija o bug X em src/login.ts"
+  --model claude-sonnet-4.6 "Fix bug X in src/login.ts"
 
-# Com MCP (Playwright etc.)
-timeout 900 cursor-agent -p --force --trust --approve-mcps "Rode os testes E2E com Playwright e resuma falhas"
+# With MCP (Playwright etc.)
+timeout 900 cursor-agent -p --force --trust --approve-mcps "Run the E2E tests with Playwright and summarize failures"
 ```
 
-## Ver também
+## See also
 
-- Contrato e escolha: `delegate-coding` · Mesma operação em outra ferramenta: `run-opencode`, `run-codex`.
-- Rastrear um fato até o bruto: [[researches/cursor-cli-headless/cursor-cli-headless|síntese]].
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-opencode`, `run-codex`.

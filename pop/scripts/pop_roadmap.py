@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Mantém arquivos de epoch e de modification apenas com tasks ainda abertas.
+"""Keeps epoch and modification files with only still-open tasks.
 
-`close <id>` é a operação de fechamento do 005_closing: exige memory
-canônica válida no mesmo
-escopo e remove somente a linha da task — em `roadmap/*.md` ou
-`modifications/*.md` — ou, para modification de task única, apenas o wikilink
-`[[M-N.T-slug]]` da linha correspondente em `MODIFICATIONS.md` (a linha da
-modification permanece). Epochs, phases e modifications nunca são removidas.
-`prune --tracked-only` é a migração segura: remove linhas cujo arquivo de
-memory já está versionado no Git. `check` lista resíduos sem editar.
+`close <id>` is the closing operation of 005_closing: it requires a valid
+canonical memory in the same scope and removes only the task's row — in
+`roadmap/*.md` or `modifications/*.md` — or, for a single-task modification,
+only the `[[M-N.T-slug]]` wikilink of the matching `MODIFICATIONS.md` line (the
+modification's row stays). Epochs, phases and modifications are never
+removed. `prune --tracked-only` is the safe migration: it removes rows whose
+memory file is already tracked in Git. `check` lists leftovers without
+editing.
 """
 
 from __future__ import annotations
@@ -27,12 +27,12 @@ TASK_ID = re.compile(
     r"|M-[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*)")
 ROW = re.compile(r"^\s*\|.*\|\s*$")
 REQUIRED_MEMORY = ("task", "project", "started", "finished", "commit")
-# Pasta de data de `memory/`: é ela que agrupa o ledger e suas entradas.
+# `memory/` date folder: it is what groups the ledger with its entries.
 MEMORY_DATE_DIR = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
-# Pastas com linhas de task removíveis no close: epochs e modifications
-# multi-task. O índice MODIFICATIONS.md tem tratamento próprio (só o wikilink
-# da task sai da linha).
+# Folders with task rows removable by close: epochs and multi-task
+# modifications. The MODIFICATIONS.md index gets its own handling (only the
+# task's wikilink leaves the row).
 ROW_DIRS = ("roadmap", "modifications")
 
 
@@ -44,13 +44,14 @@ def task_from_row(line: str) -> str | None:
 
 
 def memory_ledgers(scope: Path, task_id: str) -> list[Path]:
-    """Ledgers de `task_id` no escopo, layout em pasta de data primeiro.
+    """Ledgers of `task_id` in the scope, date-folder layout first.
 
-    Novo: `memory/<AAAA-MM-DD>/<id>.md`, com a pasta igual ao `finished` do
-    próprio ledger. Legado: `memory/<id>.md` plano — tolerado só para memory
-    anterior à adoção (ver `MEMORY_LAYOUT_SINCE` no `pop_validate`), e por isso
-    ainda resolvido aqui. Mais de um ledger para o mesmo id é ambiguidade, não
-    "o primeiro que aparecer": quem chama trata a lista, não um caminho.
+    New: `memory/<YYYY-MM-DD>/<id>.md`, with the folder equal to the ledger's
+    own `finished`. Legacy: flat `memory/<id>.md` — tolerated only for memory
+    predating the adoption (see `MEMORY_LAYOUT_SINCE` in `pop_validate`), and
+    therefore still resolved here. More than one ledger for the same id is
+    ambiguity, not "the first one found": the caller handles the list, not a
+    single path.
     """
     base = poplib.harness_root(scope) / "memory"
     found = [path for path in sorted(base.glob(f"*/{task_id}.md"))
@@ -62,9 +63,9 @@ def memory_ledgers(scope: Path, task_id: str) -> list[Path]:
 
 
 def memory_path(root: Path, scope: Path, task_id: str) -> Path:
-    """Caminho do ledger; se não existir, o canônico do layout novo — o
-    caminho só serve de mensagem quando não há arquivo, e a data da pasta é
-    justamente o que ainda não se conhece."""
+    """The ledger's path; if none exists, the canonical one of the new layout —
+    the path only serves as a message when there is no file, and the folder's
+    date is precisely what is not known yet."""
     found = memory_ledgers(scope, task_id)
     if found:
         return found[0]
@@ -74,22 +75,22 @@ def memory_path(root: Path, scope: Path, task_id: str) -> Path:
 def memory_valid(root: Path, scope: Path, task_id: str, *, canonical: bool) -> bool:
     found = memory_ledgers(scope, task_id)
     if len(found) != 1:
-        return False  # ausente, ou ambíguo entre layouts/datas
+        return False  # absent, or ambiguous between layouts/dates
     path = found[0]
     if not canonical:
         return True
     meta, _ = poplib.parse_frontmatter(path.read_text(encoding="utf-8"))
     if any(meta.get(field) in (None, "") for field in REQUIRED_MEMORY):
         return False
-    if "pr" not in meta:  # vazio explícito é válido; chave ausente não é
+    if "pr" not in meta:  # An explicit empty value is valid; a missing key is not.
         return False
     if meta.get("task") != task_id:
         return False
-    # O rótulo distingue projetos irmãos, então só faz sentido quando o escopo
-    # é um projeto **dentro** de um vault agregador. Num clone standalone o
-    # escopo é a própria raiz: ali a memory foi escrita com o rótulo relativo
-    # ao vault pai, que o clone não tem como reproduzir — exigir igualdade
-    # tornaria o repo incapaz de validar as próprias memories.
+    # The label tells sibling projects apart, so it only makes sense when the
+    # scope is a project **inside** an aggregating vault. In a standalone clone
+    # the scope is the root itself: there the memory was written with the label
+    # relative to the parent vault, which the clone has no way to reproduce —
+    # demanding equality would make the repo unable to validate its own memories.
     if scope != root and meta.get("project") != poplib.project_label(root, scope):
         return False
     if scope == root and not meta.get("project"):
@@ -99,8 +100,8 @@ def memory_valid(root: Path, scope: Path, task_id: str, *, canonical: bool) -> b
         finished = datetime.date.fromisoformat(str(meta["finished"]))
     except ValueError:
         return False
-    # A pasta de data é a única coisa que impede um agrupamento decorativo: ela
-    # tem de ser a data de conclusão que o próprio ledger declara.
+    # The date folder is the only thing that stops a decorative grouping: it
+    # must be the completion date the ledger itself declares.
     if (MEMORY_DATE_DIR.match(path.parent.name)
             and path.parent.name != finished.isoformat()):
         return False
@@ -119,7 +120,7 @@ def tracked(root: Path, path: Path) -> bool:
 
 
 def task_rows(root: Path):
-    """Linhas de tabela com id de task em roadmap/*.md e modifications/*.md."""
+    """Table rows with a task id in roadmap/*.md and modifications/*.md."""
     for scope in poplib.discover_projects(root):
         harness = poplib.harness_root(scope)
         for folder in ROW_DIRS:
@@ -135,10 +136,10 @@ def task_rows(root: Path):
 
 
 def modification_link_rows(root: Path):
-    """Wikilinks [[M-N.T-slug]] em linhas de tabela do MODIFICATIONS.md.
+    """[[M-N.T-slug]] wikilinks in MODIFICATIONS.md table rows.
 
-    Modification de task única vive só na linha do índice; o close remove
-    apenas esse wikilink (a linha da modification permanece).
+    A single-task modification lives only in the index row; close removes
+    only that wikilink (the modification's row stays).
     """
     link = re.compile(r"\[\[(M-[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*)")
     for scope in poplib.discover_projects(root):
@@ -163,17 +164,18 @@ def residuals(root: Path, *, tracked_only: bool = False):
 
 
 def _remove_row(matches, task_id: str) -> bool:
-    """Remove a única linha de `task_id` entre os arquivos de origem.
+    """Removes the single `task_id` row among the origin files.
 
-    Retorna True se removeu; False se não achou linha. Levanta RuntimeError
-    se a task aparecer em mais de uma linha (aborta sem escrever nada).
+    Returns True when removed; False when no row was found. Raises
+    RuntimeError when the task appears in more than one row (aborts without
+    writing anything).
     """
     count = sum(len(indexes) for _, _, indexes in matches)
     if count == 0:
         return False
     if count != 1:
         raise RuntimeError(
-            f"esperada exatamente 1 linha de `{task_id}`, encontradas {count}")
+            f"expected exactly 1 row for `{task_id}`, found {count}")
     path, lines, indexes = matches[0]
     remove_index = indexes[0]
     kept = lines[:remove_index] + lines[remove_index + 1:]
@@ -182,29 +184,29 @@ def _remove_row(matches, task_id: str) -> bool:
 
 
 def _unlink_modification_index(harness: Path, task_id: str) -> None:
-    """Task única: remove só o wikilink [[M-N.T-slug]] da linha do índice.
+    """Single task: removes only the [[M-N.T-slug]] wikilink from the index row.
 
-    A linha da modification permanece (status `concluída`); o id volta à
-    forma cravada `` `M-N.T-slug` ``, como uma task ainda não linkada.
+    The modification's row stays (status `completed`); the id returns to the
+    backticked `` `M-N.T-slug` `` form, like a not-yet-linked task.
     """
     index = harness / "MODIFICATIONS.md"
     if not index.is_file():
         raise RuntimeError(
-            f"nenhuma linha de `{task_id}` em roadmap/modifications e "
-            f"{index} ausente")
+            f"no row for `{task_id}` in roadmap/modifications and "
+            f"{index} is missing")
     lines = index.read_text(encoding="utf-8").splitlines()
     hits = [i for i, line in enumerate(lines)
             if ROW.match(line) and task_id in line]
     if len(hits) != 1:
         raise RuntimeError(
-            f"esperada exatamente 1 linha de `{task_id}` em {index}, "
-            f"encontradas {len(hits)}")
+            f"expected exactly 1 row for `{task_id}` in {index}, "
+            f"found {len(hits)}")
     pattern = re.compile(
         r"\[\[" + re.escape(task_id) + r"(?:\|[^\]]*)?\]\]")
     lines[hits[0]], count = pattern.subn(f"`{task_id}`", lines[hits[0]])
     if count != 1:
         raise RuntimeError(
-            f"wikilink [[{task_id}]] não encontrado na linha de {index}")
+            f"wikilink [[{task_id}]] not found in the row of {index}")
     index.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -212,9 +214,9 @@ def remove_task(root: Path, scope: Path, task_id: str, *, canonical: bool,
                 tracked_only: bool) -> int:
     memory = memory_path(root, scope, task_id)
     if not memory_valid(root, scope, task_id, canonical=canonical):
-        raise RuntimeError(f"memory inválida ou ausente: {memory}")
+        raise RuntimeError(f"invalid or missing memory: {memory}")
     if tracked_only and not tracked(root, memory):
-        raise RuntimeError(f"memory não versionada: {memory}")
+        raise RuntimeError(f"untracked memory: {memory}")
     harness = poplib.harness_root(scope)
     matches = []
     for folder in ROW_DIRS:
@@ -244,19 +246,19 @@ def main() -> int:
     if args.command == "check":
         found = list(residuals(root, tracked_only=args.tracked_only))
         for _, path, number, task_id in found:
-            print(f"{path}:{number}: task concluída residual `{task_id}`")
+            print(f"{path}:{number}: residual completed task `{task_id}`")
         return 1 if found else 0
 
     if args.command == "close":
         if not args.task_id:
-            parser.error("close exige task_id")
+            parser.error("close requires task_id")
         found = poplib.find_task(root, args.task_id)
         if not found:
-            print(f"task não encontrada no kanban: {args.task_id}", file=sys.stderr)
+            print(f"task not found in kanban: {args.task_id}", file=sys.stderr)
             return 1
         scope, stage, _ = found
         if stage != "005_closing":
-            print(f"task deve estar em 005_closing, está em {stage}",
+            print(f"task must be in 005_closing, currently in {stage}",
                   file=sys.stderr)
             return 1
         targets = [(scope, args.task_id)]
@@ -270,9 +272,9 @@ def main() -> int:
         for scope, task_id in targets:
             remove_task(root, scope, task_id, canonical=canonical,
                         tracked_only=args.tracked_only)
-            print(f"OK: removida linha concluída `{task_id}`")
+            print(f"OK: removed completed row `{task_id}`")
     except RuntimeError as error:
-        print(f"abortado: {error}", file=sys.stderr)
+        print(f"aborted: {error}", file=sys.stderr)
         return 1
     return 0
 

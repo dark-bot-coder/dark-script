@@ -1,25 +1,4 @@
 #!/usr/bin/env python3
-"""pop_worktree — cria/remove a worktree git de uma task.
-
-`add` cria a worktree no harness do projeto da task (`pop/worktrees/<task-id>`
-na anatomia nova, `worktrees/<task-id>` na legada), com a branch
-`task/<task-id>`. A rota vem de `poplib.delivery_route`: meta PoP recusa
-worktree e fica em `main`; task yolo externa parte da branch corrente de
-trabalho do repo (salvo `--base` explícito) e o PR final só existe a pedido
-do humano. Repositório alvo: `--repo`, ou a própria pasta do projeto
-quando ela é um repo git (projeto uni-repo / repo de multi-repo), senão a
-raiz do vault. `--repo <nome>` que case com um
-clone do projeto — `<nome>/` na anatomia nova, `project/<nome>/` na legada —
-usa esse clone e aninha a worktree em `.../worktrees/<task-id>/<nome>/` (task
-cross de `multi-repo` — repita o comando para cada repo
-afetado). `remove` desfaz a worktree e apaga a branch se já estiver mergeada
-(`--delete-branch` força a exclusão).
-
-Uso:
-    python3 scripts/pop_worktree.py route <task-id>
-    python3 scripts/pop_worktree.py add    <task-id> [--repo DIR|NOME] [--base BRANCH]
-    python3 scripts/pop_worktree.py remove <task-id> [--repo DIR|NOME] [--delete-branch]
-"""
 
 import argparse
 import subprocess
@@ -29,22 +8,19 @@ import poplib
 
 
 def git(repo, *args):
-    """Roda git no repo; retorna CompletedProcess (não levanta exceção)."""
     return subprocess.run(["git", "-C", str(repo), *args],
                           capture_output=True, text=True)
 
 
 def fail(action, result):
-    """Relata a falha do git de forma legível e retorna exit code 1."""
-    detail = (result.stderr or result.stdout).strip() or "sem detalhes"
-    print(f"Falha ao {action} (git exit {result.returncode}):\n  {detail}")
+    detail = (result.stderr or result.stdout).strip() or "no details"
+    print(f"Failed to {action} (git exit {result.returncode}):\n  {detail}")
     return 1
 
 
 def cmd_add(repo, worktree, branch, base, rel):
-    """git worktree add worktrees/<id>[/<repo>] -b task/<id> [<base>]."""
     if worktree.exists():
-        print(f"Worktree já existe: {worktree}")
+        print(f"Worktree already exists: {worktree}")
         return 1
     worktree.parent.mkdir(parents=True, exist_ok=True)
     args = ["worktree", "add", str(worktree), "-b", branch]
@@ -52,19 +28,18 @@ def cmd_add(repo, worktree, branch, base, rel):
         args.append(base)
     result = git(repo, *args)
     if result.returncode != 0:
-        return fail(f"criar a worktree {worktree}", result)
-    print(f"OK: worktree {worktree} criada na branch {branch}"
-          + (f" a partir de {base}." if base else "."))
-    print(f"Lembrete: registre `worktree: {rel}` no frontmatter do card.")
+        return fail(f"create worktree {worktree}", result)
+    print(f"OK: worktree {worktree} created on branch {branch}"
+          + (f" from {base}." if base else "."))
+    print(f"Reminder: record `worktree: {rel}` in the card frontmatter.")
     return 0
 
 
 def cmd_remove(repo, worktree, branch, force_delete):
-    """git worktree remove + apaga a branch se mergeada (ou com --delete-branch)."""
     result = git(repo, "worktree", "remove", str(worktree))
     if result.returncode != 0:
-        return fail(f"remover a worktree {worktree}", result)
-    print(f"OK: worktree {worktree} removida.")
+        return fail(f"remove worktree {worktree}", result)
+    print(f"OK: worktree {worktree} removed.")
 
     merged = git(repo, "branch", "--merged")
     is_merged = merged.returncode == 0 and any(
@@ -74,78 +49,76 @@ def cmd_remove(repo, worktree, branch, force_delete):
         flag = "-D" if force_delete else "-d"
         result = git(repo, "branch", flag, branch)
         if result.returncode != 0:
-            return fail(f"apagar a branch {branch}", result)
-        print(f"OK: branch {branch} apagada"
-              + (" (forçado)." if force_delete and not is_merged else "."))
+            return fail(f"delete branch {branch}", result)
+        print(f"OK: branch {branch} deleted"
+              + (" (forced)." if force_delete and not is_merged else "."))
     else:
-        print(f"Branch {branch} mantida (não mergeada — use --delete-branch "
-              f"para forçar).")
+        print(f"Branch {branch} kept (not merged — use --delete-branch "
+              f"to force).")
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Cria ou remove a worktree git de uma task "
+        description="Create or remove a task's Git worktree "
                     "(worktrees/<id>, branch task/<id>).")
     parser.add_argument("action", choices=["add", "remove", "route"],
-                        help="add/remove: gere worktree; route: mostra rota Git")
-    parser.add_argument("task_id", help="id da task (nome da pasta no kanban)")
-    parser.add_argument("--repo", metavar="DIR|NOME",
-                        help="repositório git alvo: caminho, ou nome de clone "
-                             "do projeto da task — <nome>/ na anatomia nova, "
-                             "project/<nome>/ na legada (worktree aninhada em "
-                             "worktrees/<id>/<nome>/); default: pasta do "
-                             "projeto se for repo git, senão a raiz do vault")
+                        help="add/remove: manage worktree; route: show Git route")
+    parser.add_argument("task_id", help="task ID (kanban folder name)")
+    parser.add_argument("--repo", metavar="DIR|NAME",
+                        help="target Git repository: path or project clone name; "
+                             "defaults to the project if it is a Git repository, "
+                             "otherwise to the vault root")
     parser.add_argument("--base", metavar="BRANCH",
-                        help="branch de partida para a nova branch (só no add)")
+                        help="base branch for the new branch (add only)")
     parser.add_argument("--delete-branch", action="store_true",
-                        help="no remove, apaga a branch mesmo sem merge")
+                        help="on remove, delete the branch even if unmerged")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
-                        help="raiz do vault (default: pasta acima de scripts/)")
+                        help="vault root (default: directory above scripts/)")
     args = parser.parse_args()
 
     root = poplib.vault_root(args.vault)
     found = poplib.find_task(root, args.task_id)
     if not found:
-        print(f"Task não encontrada em nenhum projeto: {args.task_id}")
+        print(f"Task not found in any project: {args.task_id}")
         return 1
     project, stage, task_dir = found
     card = task_dir / f"{args.task_id}.md"
     meta = poplib.read_card(card)
     yolo = bool(meta.get("yolo"))
     route = poplib.delivery_route(root, project, yolo=yolo)
-    print(f"Task {args.task_id} em {poplib.project_label(root, project)} "
+    print(f"Task {args.task_id} in {poplib.project_label(root, project)} "
           f"({stage}).")
     if args.action == "route":
-        print(f"worktree={'sim' if route['worktree'] else 'não'}")
-        print(f"integration_branch={route['task_branch'] or 'atual'}")
-        print(f"final_pr={'a-pedido' if yolo and route['worktree'] else 'sim' if route['scope_pr'] else 'não'}")
-        print(f"target_branch={route['target_branch'] or ('a-pedido' if yolo else 'configurada-no-projeto')}")
+        print(f"worktree={'yes' if route['worktree'] else 'no'}")
+        print(f"integration_branch={route['task_branch'] or 'current'}")
+        print(f"final_pr={'on-request' if yolo and route['worktree'] else 'yes' if route['scope_pr'] else 'no'}")
+        print(f"target_branch={route['target_branch'] or ('on-request' if yolo else 'configured-in-project')}")
         print(f"merge_owner={route['merge_owner']}")
         return 0
     if not route["worktree"]:
-        print("Operação recusada: meta PoP trabalha direto em main, sem "
-              "branch/worktree/PR próprios da task.")
+        print("Operation refused: the local meta PoP works directly on main, "
+              "without a task branch, worktree, or PR.")
         return 1
 
     worktree = poplib.harness_root(project) / "worktrees" / args.task_id
     if args.repo:
-        # clone do projeto: `<nome>/` na anatomia nova, `project/<nome>/` na legada
+        # Project clone: `<name>/` in current anatomy, `project/<name>/` in legacy anatomy.
         embedded = project / args.repo
         if not embedded.is_dir():
             embedded = project / "project" / args.repo
         if "/" not in args.repo and embedded.is_dir():
-            # nome de clone do projeto: worktree aninhada, uma por repo afetado
+            # Named project clone: one nested worktree per affected repository.
             repo = embedded
             worktree = worktree / args.repo
         else:
             repo = poplib.vault_root(args.repo)
     elif (project / ".git").exists():
-        repo = project  # projeto uni-repo ou repo de multi-repo
+        repo = project  # uni-repo project or multi-repo repository.
     else:
         repo = root
     if not (repo / ".git").exists():
-        print(f"Não é um repositório git: {repo}")
+        print(f"Not a git repository: {repo}")
         return 1
     branch = f"task/{args.task_id}"
     if args.action == "add":
@@ -155,12 +128,12 @@ def main():
                 current = git(repo, "branch", "--show-current")
                 base = current.stdout.strip()
                 if current.returncode != 0 or not base:
-                    print("Operação recusada: repo em HEAD destacado; task yolo "
-                          "externa precisa de uma branch de trabalho corrente "
-                          "(ou --base explícito).")
+                    print("Operation refused: the repo is on a detached HEAD; "
+                          "an external yolo task needs a current working "
+                          "branch (or an explicit --base).")
                     return 1
-            print(f"Rota yolo: worktree a partir de {base} e integração nela "
-                  f"mesma; PR final somente a pedido do humano; merge "
+            print(f"Yolo route: worktree from {base} and integration back "
+                  f"into it; final PR only on human request; merge by "
                   f"{route['merge_owner']}.")
         return cmd_add(repo, worktree, branch, base,
                        worktree.relative_to(project).as_posix())

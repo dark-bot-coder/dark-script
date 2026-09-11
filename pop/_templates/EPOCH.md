@@ -1,45 +1,45 @@
-# Epoch <n> — <nome da epoch>
+# Epoch <n> — <epoch name>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-- **Projeto:** [[pop/PROJECT|<Nome do projeto>]] · **Roadmap:** [[pop/ROADMAP|Roadmap]]
-- **Status:** pendente | em andamento | concluída
-- **Descrição:** uma linha — o que este capítulo entrega.
-- **Yolo:** sim | não — bullet **opcional** (ausente = não); só o humano marca.
-- **Abandonar/pausar se:** condição objetiva, se houver (auditada pela `weekly-review`).
+- **Project:** [[pop/PROJECT|<Project name>]] · **Roadmap:** [[pop/ROADMAP|Roadmap]]
+- **Status:** pending | in progress | completed
+- **Description:** one line — what this chapter delivers.
+- **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
+- **Abort/pause if:** objective condition, if any (audited by the `weekly-review`).
 
-> Uma phase por seção; sob cada phase, somente suas tasks ainda abertas — **sempre descrições de uma linha**. Detalhe vai para a spec ou para a pasta da task no kanban. Task iniciada ganha link `[[<id>]]`; ao concluir o `005_closing`, sai da tabela depois de sua memory válida (ver [[WORKFLOW|WORKFLOW]]).
-> **Yolo herda:** epoch yolo → phases e tasks herdam; phase yolo → tasks herdam. Opt-out/opt-in por task: anexe ` · yolo: não` (ou ` · yolo: sim`) ao fim da célula Descrição — sem coluna nova. O `new-task` resolve a herança e estampa o card (seção Yolo do [[WORKFLOW|WORKFLOW]]).
-> **Size:** o agente sugere `S|M|L` na Descrição; `new-task` estampa no card e o humano corrige em 001. Size limita escopo, número de frentes e profundidade; risco, skills, dependências e write sets determinam a topologia no [[WORKFLOW|WORKFLOW]].
+> One phase per section; under each phase, only still-open tasks — **always one-line descriptions**. On closing the `005_closing` stage, remove a task row only after its canonical memory is valid; preserve the epoch, phase, and other open tasks.
+> **Yolo inherits:** a yolo epoch → phases and tasks inherit; a yolo phase → tasks inherit. Per-task opt-out/opt-in: append ` · yolo: no` (or ` · yolo: yes`) to the end of the Description cell — no new column. `new-task` resolves the inheritance and stamps the card (Yolo mode section of [[WORKFLOW|WORKFLOW]]).
+> **Size:** the agent suggests `S|M|L` in the Description; `new-task` stamps it on the card and the human corrects it in 001. Size guides tier/effort; risk, skills, dependencies and write sets determine topology in [[WORKFLOW|WORKFLOW]].
 
-## Recon e forks
+## Recon and forks
 
-> Pesquisas em `pop/researches/` (escopo com o harness na própria raiz: sem o prefixo `pop/`) que embasaram o detalhamento; o que ficou sem resposta é RECON NEEDED, com o check que resolve. Forks: mudanças de rota pré-identificadas.
+> Researches in `pop/researches/` (a scope whose harness lives at its own root: without the `pop/` prefix) that grounded the breakdown; whatever remained unanswered is RECON NEEDED, with the check that resolves it. Forks: pre-identified route changes.
 
-- [[pop/researches/<assunto>/<nota>|<assunto>]] — o que estabeleceu, em uma linha.
-- [ ] RECON NEEDED: <suposição> — check: <pesquisa/experimento/task que resolve>.
-- Fork: se <observação/conclusão X> → <o que muda na epoch, em uma linha>.
+- [[pop/researches/<topic>/<note>|<topic>]] — what it established, in one line.
+- [ ] RECON NEEDED: <assumption> — check: <research/experiment/task that resolves it>.
+- Fork: if <observation/conclusion X> → <what changes in the epoch, in one line>.
 
-## Phase <n>.1 — <nome da phase>
+## Phase <n>.1 — <phase name>
 
-- **Status:** pendente | em andamento | concluída
-- **Descrição:** uma linha.
-- **Yolo:** sim | não — bullet **opcional** (ausente = herda da epoch).
+- **Status:** pending | in progress | completed
+- **Description:** one line.
+- **Yolo:** yes | no — **optional** bullet (absent = inherits from the epoch).
 - **Specs:** [[pop/specs/<spec>|<spec>]]
 
-| Task | Descrição (≤1 linha) | Status |
-|------|----------------------|--------|
-| `<n>.1.1-<slug>` | O que entrega. · size: M | não iniciada |
-| [[<n>.1.2-<slug>]] | O que entrega (linkada: já existe no kanban). | 002_planning |
-| `<n>.1.3-verificacao-da-phase` | Escreve/roda a suíte da phase (critérios `verify: phase`) e conserta o que ela pegar. · size: M | não iniciada |
+| Task | Description (≤1 line) | Status |
+|------|-----------------------|--------|
+| `<n>.1.1-<slug>` | What it delivers. · size: M | not started |
+| [[<n>.1.2-<slug>]] | What it delivers (linked: already exists in the kanban). | 002_planning |
+| `<n>.1.3-phase-verification` | Writes/runs the phase's suite (`verify: phase` criteria) and fixes what it catches. · size: M | not started |
 
-> **Toda phase termina com a task `verificacao-da-phase`** (`depends_on` todas as demais): é a única em que testes rodam — seção "Verificação de phase" do [[WORKFLOW|WORKFLOW]].
+> **Every phase ends with the `phase-verification` task** (`depends_on` all the others): it is the only one in which tests run — section "Phase verification" of the [[WORKFLOW|WORKFLOW]].
 
-## Phase <n>.2 — <nome da phase>
+## Phase <n>.2 — <phase name>
 
-- **Status:** pendente
-- **Descrição:** uma linha.
+- **Status:** pending
+- **Description:** one line.
 
-| Task | Descrição (≤1 linha) | Status |
-|------|----------------------|--------|
-| `<n>.2.1-<slug>` | ... | não iniciada |
+| Task | Description (≤1 line) | Status |
+|------|-----------------------|--------|
+| `<n>.2.1-<slug>` | ... | not started |

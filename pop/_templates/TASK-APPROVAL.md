@@ -1,60 +1,60 @@
-# Aprovação — [[<id>-<slug>]]
+# Approval — [[<id>-<slug>]]
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Blockquotes are filling instructions — **delete them when filling**.
 
-- **Etapa:** 003_human_approval · **Responsável:** user | revisor independente em yolo `critical`
+- **Stage:** 003_human_approval · **Owner:** user | independent reviewer in yolo `critical`
 
-> Uma rodada por ida a 003. Em yolo, este arquivo só recebe rodada de 003 quando `critical: true` — o `pop-judge-dredd` assina em contexto fresco, devoluções 1–2 retornam automaticamente a 002 e a 3ª falha ativa `circuit_breaker`; as demais tasks yolo transitam 002 → 004 sem rodada. Rodadas nunca são apagadas.
+> One round per visit to 003. In yolo, this file only gets a 003 round when `critical: true` — a **strong** critic signs, returns 1–2 automatically go to 002 and failure 3 activates the circuit breaker; other yolo tasks transit 002 → 004 without a round. Never delete old rounds.
 
-## Rodada 1 — AAAA-MM-DD
+## Round 1 — YYYY-MM-DD
 
-### Brief para decisão
+### Decision brief
 
-- **Entrega:** <uma linha>.
-- **Estratégia:** <uma ou duas linhas>.
-- **Topologia:** <executor único ou frentes/ondas>.
-- **Risco principal:** <risco material ou nenhum>.
-- **Critérios principais:** <IDs ou resumo curto>.
-- **Plano:** [[<id>-<slug>.plan]] — *siga para revisar o brief completo*.
+- **Delivery:** <one line>.
+- **Strategy:** <one or two lines>.
+- **Topology:** <single executor or fronts/waves>.
+- **Main risk:** <material risk or none>.
+- **Main criteria:** <IDs or short summary>.
+- **Plan:** [[<id>-<slug>.plan]] — *follow to review the complete brief*.
 
-### Resposta do humano
+### Human response
 
-_(escreva aqui: aprovado, ou o que mudar)_
+_(write here: approved, or what to change)_
 
-- [ ] Feito
+- [ ] Done
 
-### Decisão do agente
+### Agent decision
 
-_(após o Feito: `aprovado → 004` ou `mudanças pedidas → 002: <resumo>`)_
+_(after Done: `approved → 004` or `changes requested → 002: <summary>`)_
 
-### Resposta do crítico (yolo)
+### Critic response (yolo)
 
-- **Contexto:** `pop-judge-dredd` independente, em contexto fresco.
-- **Devolução:** 0 | 1 | 2 de 2.
-- **Decisão:** aprovado → 004 | devolvido → 002 | circuit breaker.
-- **Motivo/evidência:** <objetivo, sem reasoning>.
+- **Context:** independent strong.
+- **Return:** 0 | 1 | 2 of 2.
+- **Decision:** approved → 004 | returned → 002 | circuit breaker.
+- **Reason/evidence:** <objective, no reasoning>.
 
-## Merge — 005_closing — AAAA-MM-DD
+## Merge — 005_closing — YYYY-MM-DD
 
-> Rodada criada quando o fluxo aplicável exigir merge humano. **Fora de yolo, revisar este PR é a verificação** — não existe revisor agêntico, e nada de memory, specs ou limpeza do roadmap acontece antes do `- [x] Feito`. Em yolo, siga a política de integração de [[WORKFLOW|WORKFLOW]]; não invente um segundo gate de qualidade aqui.
+> Created when the applicable flow requires human merge. **Outside yolo, reviewing this PR is the verification** — there is no agentic reviewer, and no memory, spec sync or roadmap cleanup happens before the `- [x] Done`. In yolo, follow [[WORKFLOW|WORKFLOW]] integration policy; do not invent another quality gate here.
 
-- **PR:** <link> — `task/<id>-<slug>` → `<branch de PR>`.
-- _Sem repositório git: registre a aprovação final aplicável._
+- **PR:** <link> — `task/<id>-<slug>` → `<PR branch>`.
+- _Without git: record the applicable final approval._
 
-### Resposta do humano
+### Human response
 
-_(mergeie, ou autorize explicitamente o agente)_
+_(merge, or explicitly authorize the agent)_
 
-- [ ] Feito
+- [ ] Done
 
-### Delta da devolução
+### Delta of the return
 
-> Preencha **somente** se pedir correção em vez de mergear. Reentrada parcial não é privilégio do yolo: nomear o delta evita que a correção de uma frente reexecute a task inteira. O agente transporta o tipo com `pop_move --return-kind <tipo>`.
+> Fill in **only** if you ask for a correction instead of merging. Partial re-entry is not a yolo privilege: naming the delta keeps a one-front correction from re-executing the whole task. The agent carries the type with `pop_move --return-kind <type>`.
 
-- **Tipo:** lacuna (faltou critério; o entregue está correto) | premissa (estratégia errada) | execucao (não cumpriu o combinado).
-- **Critérios/frentes afetados:** <IDs> — <o que falta, uma linha>.
-- **Frentes intactas:** `<Fxx>` — **não** reexecutar.
+- **Type:** lacuna (a criterion was missing; what was delivered is correct) | premissa (the strategy was wrong) | execucao (did not deliver what was agreed).
+- **Affected criteria/fronts:** <IDs> — <what is missing, one line>.
+- **Untouched fronts:** `<Fxx>` — do **not** re-execute.
 
-### Decisão do agente
+### Agent decision
 
-_(commit final, memory gerada, worktree removida e task encerrada)_
+_(final commit, generated memory, removed worktree and closed task)_

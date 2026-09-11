@@ -1,21 +1,21 @@
-# Pesquisas sugeridas — <Nome do projeto>
+# Suggested researches — <Project name>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**.
 
-Ficha: [[pop/PROJECT|<Nome do projeto>]] · Roadmap: [[pop/ROADMAP|Roadmap]]
+Profile: [[pop/PROJECT|<Project name>]] · Roadmap: [[pop/ROADMAP|Roadmap]]
 
-> Arquivo **opcional**, ao lado do ROADMAP.md. Prompts de **pesquisa profunda** propostos pelo agente para o **usuário** rodar na ferramenta que preferir (deep research) e depositar o resultado em `pop/researches/<assunto>/` (escopo com o harness na própria raiz: sem o prefixo `pop/`). Pesquisa entregue enriquece o roadmap (recon das epochs), as specs e o projeto em si.
+> **Optional** file, next to ROADMAP.md. **Deep research** prompts proposed by the agent for the **user** to run in whatever tool they prefer (deep research) and deposit the result in `pop/researches/<topic>/` (a scope whose harness lives at its own root: without the `pop/` prefix). A delivered research enriches the roadmap (epoch recon), the specs and the project itself.
 
-## <assunto-em-kebab-case>
+## <topic-in-kebab-case>
 
-- **Status:** pendente (entregue → a seção sai do arquivo; a síntese é o registro)
-- **Alimenta:** epoch <n> | spec [[pop/specs/<spec>|<spec>]] | RECON NEEDED <qual>
-- **Prompt sugerido:**
+- **Status:** pending (delivered → the section leaves the file; the synthesis is the record)
+- **Feeds:** epoch <n> | spec [[pop/specs/<spec>|<spec>]] | RECON NEEDED <which>
+- **Suggested prompt:**
 
-> Prompt completo e autocontido: contexto do projeto em 2–3 frases, a pergunta central, o que a resposta precisa cobrir (comparações, fontes, critérios) e o formato esperado do resultado. Deve funcionar colado em qualquer ferramenta de pesquisa, sem este repositório por perto.
+> A complete, self-contained prompt: project context in 2–3 sentences, the central question, what the answer needs to cover (comparisons, sources, criteria) and the expected format of the result. It must work pasted into any research tool, without this repository nearby.
 
-## Como usar
+## How to use
 
-1. O agente propõe pesquisas aqui (`new-project`, `plan-roadmap`, `import-project`) — uma seção por assunto.
-2. O usuário roda o prompt onde quiser e entrega o resultado bruto em `pop/researches/<assunto>/raw/` (dica: o Obsidian Web Clipper converte artigos web em markdown).
-3. Resultado entregue → o agente roda a skill `ingest-research`: síntese em `pop/researches/<assunto>/<assunto>.md`, **remoção da seção daqui** (o arquivo não guarda histórico — a síntese é o registro) e proposta de updates de roadmap/spec (contradição com spec/nota fica sinalizada, nunca silenciosa).
+1. The agent proposes researches here (`new-project`, `plan-roadmap`, `import-project`) — one section per topic.
+2. The user runs the prompt wherever they want and delivers the raw result in `pop/researches/<topic>/raw/` (tip: the Obsidian Web Clipper converts web articles to markdown).
+3. Result delivered → the agent runs the `ingest-research` skill: synthesis in `pop/researches/<topic>/<topic>.md`, **removal of the section from here** (the file keeps no history — the synthesis is the record) and a proposal of roadmap/spec updates (contradiction with a spec/note is flagged, never silent).

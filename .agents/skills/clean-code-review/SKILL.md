@@ -1,44 +1,44 @@
 ---
 name: clean-code-review
-description: Roteiro de revisão de código com severidade e evidência - verificar comportamento, complexidade, nomes e testes sem virar policiamento estético. Use ao verificar tasks de código (005) e como critério de leitura em gates de plano ou PR. Só projetos de código.
+description: Code review script with severity and evidence - verifying behavior, complexity, names and tests without turning into aesthetic policing. Use when verifying code tasks (005) and as a reading criterion in plan or PR gates. Code projects only.
 ---
 
 # clean-code-review
 
-**Princípio: aprova-se a mudança que melhora a saúde geral do código, não a mudança perfeita.** A revisão produz evidência, não opinião: cada comentário aponta trecho, impacto e severidade. Quem escreve o código usa a skill irmã `clean-code-change`.
+**Principle: approve the change that improves the code's overall health, not the perfect change.** A review produces evidence, not opinion: every comment points to a snippet, an impact and a severity. Whoever writes the code uses the sibling skill `clean-code-change`.
 
-**Parametrização:** rode/confira os comandos declarados na seção **"Verificação do projeto"** do AGENTS.md do projeto. Nunca bloqueie por preferência pessoal, contagem de linhas ou estilo que ferramenta automática já cobre.
+**Parametrization:** run/verify the commands declared in the **"Project verification"** section of the project's AGENTS.md. Never block over personal preference, line counting or style that automated tooling already covers.
 
-## Roteiro de leitura
+## Reading script
 
-1. Leia primeiro **objetivo, contrato afetado e testes**; só então o diff — na ordem em que o sistema o executa ou o usuário o experimenta, não na ordem alfabética dos arquivos.
-2. Verifique, nesta ordem de importância:
-   - **Comportamento e bordas:** o código faz o que o contrato promete? Casos de erro, limites e efeitos externos cobertos?
-   - **Testes:** existem, são simples e falhariam se o comportamento novo quebrasse? Teste que nunca falha não protege.
-   - **Complexidade e acoplamento:** a mudança reduz ou ao menos não aumenta a complexidade acidental? A abstração nova representa variação real?
-   - **Nomes e comentários:** intenção legível sem decifrar detalhes; comentário explica "porquê", não narra o código.
-   - **Consistência local e documentação:** segue o idioma do arquivo/projeto; documentação e specs afetadas atualizadas.
-3. Confirme a **evidência automática**: formatter/linter/testes do projeto executados e limpos (ou desvio justificado por escrito).
+1. Read the **goal, affected contract and tests** first; only then the diff — in the order the system executes it or the user experiences it, not in the alphabetical order of the files.
+2. Verify, in this order of importance:
+   - **Behavior and edges:** does the code do what the contract promises? Error cases, limits and external effects covered?
+   - **Tests:** do they exist, are they simple, and would they fail if the new behavior broke? A test that never fails protects nothing.
+   - **Complexity and coupling:** does the change reduce — or at least not increase — accidental complexity? Does the new abstraction represent a real variation?
+   - **Names and comments:** intention readable without deciphering details; comments explain the "why", they don't narrate the code.
+   - **Local consistency and documentation:** follows the file's/project's idiom; affected documentation and specs updated.
+3. Confirm the **automated evidence**: the project's formatter/linter/tests executed and clean (or a deviation justified in writing).
 
-## Severidade de cada comentário
+## Severity of each comment
 
-| Severidade | Quando | Efeito |
-|------------|--------|--------|
-| **bloqueante** | Correção, risco, quebra de contrato, teste ausente para comportamento novo | Impede aprovação até resolver |
-| **sugestão** | Melhoria justificável de leitura, coesão ou custo futuro | Autor decide; registrar a razão |
-| **nit** | Preferência não bloqueante | Nunca segura a mudança |
+| Severity | When | Effect |
+|----------|------|--------|
+| **blocking** | Correctness, risk, contract breakage, missing test for new behavior | Prevents approval until resolved |
+| **suggestion** | Justifiable improvement in readability, cohesion or future cost | Author decides; record the reason |
+| **nit** | Non-blocking preference | Never holds the change |
 
-- Todo comentário traz **trecho + impacto + razão** — "fica mais limpo" não é razão; "o leitor precisa simular 3 estados para saber se X ocorre" é.
-- Se a explicação do autor só vive na conversa, peça que ela vire **código mais simples ou comentário de motivo** — conversa se perde, código fica.
+- Every comment carries **snippet + impact + reason** — "it's cleaner" is not a reason; "the reader has to simulate 3 states to know whether X happens" is.
+- If the author's explanation lives only in the conversation, ask for it to become **simpler code or a motive comment** — conversation gets lost, code stays.
 
-## Decisão
+## Decision
 
-- **Aprove** quando a mudança melhora a saúde do código, mesmo imperfeita.
-- Dívida identificada mas adiada exige **follow-up explícito e rastreável** (nota no card, seção "Aberto" da spec ou proposta de task) — aprovar sem registrar é perder a dívida.
-- **Devolva** (no PoP: retorno de 005 para 004/002) apenas por item bloqueante, citando o critério ferido e a evidência.
+- **Approve** when the change improves the code's health, even if imperfect.
+- Debt identified but deferred requires an **explicit and trackable follow-up** (note on the card, the spec's "Open" section or a task proposal) — approving without recording it is losing the debt.
+- **Send back** (in the PoP: return from 005 to 004/002) only over a blocking item, citing the violated criterion and the evidence.
 
-## O que esta revisão não é
+## What this review is not
 
-- Não é gate de perfeição nem de gosto: estilo automatizável pertence ao formatter/linter, não ao revisor.
-- Não é auditoria do repositório inteiro: o escopo é o diff e o que ele toca.
-- Não impõe limites numéricos nem padrões de OO — coesão, domínio e evidência decidem.
+- It is not a gate of perfection or taste: automatable style belongs to the formatter/linter, not to the reviewer.
+- It is not an audit of the whole repository: the scope is the diff and what it touches.
+- It imposes no numeric limits or OO patterns — cohesion, domain and evidence decide.

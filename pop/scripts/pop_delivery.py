@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entrega mecânica do yolo externo: task→branch corrente e PR sob demanda."""
+"""Mechanical external-yolo delivery: task→current branch and on-demand PR."""
 
 from __future__ import annotations
 
@@ -22,25 +22,25 @@ def repo_for(project: Path, explicit: str | None) -> Path:
         return Path(explicit).resolve()
     if (project / ".git").exists():
         return project
-    raise RuntimeError("repo ambíguo: use --repo DIR")
+    raise RuntimeError("ambiguous repository: use --repo DIR")
 
 
 def ensure_clean(repo: Path):
     status = git(repo, "status", "--porcelain")
     if status.returncode or status.stdout.strip():
-        raise RuntimeError("working tree não está limpa")
+        raise RuntimeError("working tree is not clean")
 
 
 def integrate(repo: Path, task_id: str, dry_run: bool) -> str:
     ensure_clean(repo)
     branch = git(repo, "branch", "--show-current").stdout.strip()
     if not branch:
-        raise RuntimeError("HEAD destacado: a integração yolo exige uma branch "
-                           "de trabalho corrente")
+        raise RuntimeError("detached HEAD: yolo integration requires a "
+                           "current working branch")
     task_branch = f"task/{task_id}"
     exists = git(repo, "show-ref", "--verify", f"refs/heads/{task_branch}")
     if exists.returncode:
-        raise RuntimeError(f"branch ausente: {task_branch}")
+        raise RuntimeError(f"missing branch: {task_branch}")
     ancestor = git(repo, "merge-base", "--is-ancestor", task_branch, branch)
     if ancestor.returncode == 0:
         return git(repo, "rev-parse", branch).stdout.strip()
@@ -50,7 +50,7 @@ def integrate(repo: Path, task_id: str, dry_run: bool) -> str:
     if merged.returncode:
         git(repo, "merge", "--abort")
         detail = (merged.stderr or merged.stdout).strip()
-        raise RuntimeError(f"conflito/falha de integração: {detail}")
+        raise RuntimeError(f"integration conflict/failure: {detail}")
     return git(repo, "rev-parse", "HEAD").stdout.strip()
 
 
@@ -58,22 +58,22 @@ def final_pr(repo: Path, base: str, dry_run: bool) -> str:
     ensure_clean(repo)
     head = git(repo, "branch", "--show-current").stdout.strip()
     if not head:
-        raise RuntimeError("HEAD destacado: o PR final exige uma branch de "
-                           "trabalho corrente")
+        raise RuntimeError("detached HEAD: the final PR requires a current "
+                           "working branch")
     if shutil.which("gh") is None:
-        raise RuntimeError("ferramenta `gh` ausente")
+        raise RuntimeError("missing `gh` tool")
     existing = subprocess.run(
-        ["gh", "pr", "list", "--base", base,
-         "--head", head, "--state", "open", "--json", "url",
-         "--jq", ".[0].url"], cwd=repo, capture_output=True, text=True)
+        ["gh", "pr", "list", "--base", base, "--head", head,
+         "--state", "open", "--json", "url", "--jq", ".[0].url"],
+        cwd=repo, capture_output=True, text=True)
     if existing.returncode == 0 and existing.stdout.strip():
         return existing.stdout.strip()
     if dry_run:
         return f"dry-run: gh pr create --base {base} --head {head}"
     created = subprocess.run(
-        ["gh", "pr", "create", "--base", base,
-         "--head", head, "--title", "Entrega yolo do PoP",
-         "--body", "Entrega integrada e verificada pelo fluxo yolo do PoP."],
+        ["gh", "pr", "create", "--base", base, "--head", head,
+         "--title", "PoP yolo delivery",
+         "--body", "Delivery integrated and verified by the PoP yolo flow."],
         cwd=repo, capture_output=True, text=True)
     if created.returncode:
         raise RuntimeError((created.stderr or created.stdout).strip())
@@ -91,7 +91,7 @@ def main():
     pr = sub.add_parser("scope-pr")
     pr.add_argument("--repo", default=".")
     pr.add_argument("--base", default="main",
-                    help="branch de destino do PR (default: main)")
+                    help="PR target branch (default: main)")
     pr.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     try:
@@ -101,18 +101,18 @@ def main():
         root = poplib.vault_root(args.vault)
         found = poplib.find_task(root, args.task_id)
         if not found:
-            raise RuntimeError(f"task não encontrada: {args.task_id}")
+            raise RuntimeError(f"task not found: {args.task_id}")
         project, _stage, task_dir = found
         meta = poplib.read_card(task_dir / f"{args.task_id}.md")
         route = poplib.delivery_route(root, project, yolo=meta.get("yolo") is True)
         if not route["worktree"]:
-            raise RuntimeError("meta PoP entrega direto em main; integração externa recusada")
+            raise RuntimeError("a local scope delivers directly to main")
         if meta.get("yolo") is not True:
-            raise RuntimeError("integrate é exclusivo de task yolo externa")
+            raise RuntimeError("integrate is only for an external yolo task")
         print(integrate(repo_for(project, args.repo), args.task_id, args.dry_run))
         return 0
     except RuntimeError as error:
-        print(f"abortado: {error}", file=sys.stderr)
+        print(f"aborted: {error}", file=sys.stderr)
         return 1
 
 

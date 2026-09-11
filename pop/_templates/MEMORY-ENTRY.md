@@ -1,20 +1,20 @@
 ---
 task: <id>-<slug>
-entry: <nn>-<slug-da-entrada>
+entry: <nn>-<entry-slug>
 ---
 
-# <título curto: a coisa feita>
+# <short title: the thing done>
 
-> **Entrada de memory.** Mora em `memory/<AAAA-MM-DD>/<id>-<slug>.<nn>-<slug-da-entrada>.md`, na mesma pasta do [[_templates/MEMORY|ledger]] da task, que a indexa em `## Entradas`. Limite: **800 caracteres**. Entrada não linkada pelo ledger é órfã e reprova a validação.
-> `<nn>` é sequencial de dois dígitos (`01`, `02`…) na **ordem cronológica dos acontecimentos**, não na ordem de conveniência. Renumerar quebra a linha do tempo.
-> Uma entrada = **uma coisa feita**. Áreas alteradas, telemetria, decisão durável e desvio são cada um a sua entrada, não bullets espremidos num arquivo só. Se não couber em 800 caracteres, quase sempre são duas entradas.
-> Não refaça a narrativa do plano nem da execução, não invente história e não substitua ponteiro por resumo.
+> **Memory entry.** It lives in `memory/<YYYY-MM-DD>/<id>-<slug>.<nn>-<entry-slug>.md`, in the same folder as the task [[_templates/MEMORY|ledger]], which indexes it under `## Entries`. Ceiling: **800 characters**. An entry the ledger does not link is orphaned and fails validation.
+> `<nn>` is a two-digit sequence (`01`, `02`…) in the **chronological order of what happened**, not in order of convenience. Renumbering breaks the timeline.
+> One entry = **one thing done**. Changed areas, telemetry, a durable decision and a deviation are each their own entry, not bullets squeezed into a single file. If it does not fit in 800 characters, it is almost always two entries.
+> Do not retell the plan or the execution narrative, do not invent history, and do not replace a pointer with a summary.
 
-<Duas a quatro frases: o que foi feito e por que dessa forma. Fato, não narrativa de tentativa e erro.>
+<Two to four sentences: what was done and why this way. Fact, not a trial-and-error narrative.>
 
-## Evidência
+## Evidence
 
-> **Obrigatória: ao menos um wikilink.** É o que transforma a entrada em prova em vez de afirmação. Aponte a spec que o trabalho alterou ou o arquivo que ele tocou — wikilink para arquivo não-markdown é válido e desejável.
+> **Mandatory: at least one wikilink.** It is what turns the entry into proof instead of assertion. Point at the spec the work changed or the file it touched — a wikilink to a non-markdown file is valid and desirable.
 
-- [[specs/<spec>|<spec>]] — *siga para o contrato que esta mudança alterou*.
-- [[pop/scripts/<arquivo>.py]] — *o arquivo onde a mudança está*.
+- [[specs/<spec>|<spec>]] — *follow for the contract this change altered*.
+- [[pop/scripts/<file>.py]] — *the file where the change lives*.

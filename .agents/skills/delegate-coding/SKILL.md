@@ -1,63 +1,61 @@
 ---
 name: delegate-coding
-description: Delega trabalho de código a um CLI de coding agent headless (Cursor CLI, opencode, Codex CLI ou droid) - contrato de invocação, escolha da ferramenta e regras de yolo/auth. Use quando for executar uma tarefa de código através de outra ferramenta agêntica em vez de fazê-la diretamente.
+description: Delegates coding work to a headless coding agent CLI (Cursor CLI, opencode, Codex CLI or droid) - invocation contract, tool choice and yolo/auth rules. Use when executing a coding task through another agentic tool instead of doing it directly.
 ---
 
 # delegate-coding
 
-**Princípio: quem controla é o orquestrador, não o CLI.** O agente delegado roda com aprovação automática total; o escopo, o isolamento e os limites vêm de quem invoca. Este hub define o contrato comum — o operacional de cada ferramenta está na skill dela.
+**Principle: the orchestrator is in control, not the CLI.** The delegated agent runs with full auto-approval; the scope, the isolation and the limits come from the invoker. This hub defines the common contract — each tool's operational detail lives in its own skill.
 
-> **Claude Code está fora desta família de propósito** (decisão de 2026-07-16): o uso headless do CLI implica custos adicionais, contra o objetivo das skills — não adicione `run-claude-code` de volta sem decisão do humano.
+> **Claude Code is deliberately out of this family** (decision of 2026-07-16): headless use of the CLI implies additional costs, against the purpose of these skills — do not add `run-claude-code` back without a human decision.
 
-## Contrato de invocação (vale para as 4 ferramentas)
+## Invocation contract (applies to all 4 tools)
 
-1. **Yolo mode sempre.** O CLI delegado roda com auto-aprovação total (flags na tabela abaixo). Nunca configure permissionamento fino no CLI — planejamento e permissões são responsabilidade do orquestrador.
-2. **Login é pré-condição.** As ferramentas já estão autenticadas na máquina. **Erro de autenticação (menção a credencial/login/API key/401/403 na saída) aborta completamente a task do orquestrador** — sem retry, sem fallback para outra ferramenta, sem seguir com a implementação. Reporte ao humano e pare. Falha imediata **sem** sinal de auth (flag desconhecida, uso incorreto) é **erro de invocação**, não de login: confira o `--help`, corrija o comando e reinvoque.
-3. **Isolamento pelo orquestrador:** rode o CLI dentro de uma worktree/diretório dedicado à task, nunca na árvore principal.
-4. **Prompt escopado:** objetivo único, arquivos/áreas explícitos, critério de conclusão verificável e fronteira "não toque em X". Uma task = uma sessão.
-5. **Timeout sempre:** envolva toda invocação em `timeout <segundos> <comando>` — CLIs headless podem travar sem sair.
-6. **Saída parseável:** peça formato JSON e extraia resultado, custo e id de sessão; registre o id para follow-up.
-7. **Verifique o resultado:** a saída do CLI é alegação, não prova — confira diff/testes antes de aceitar.
+1. **Yolo mode always.** The delegated CLI runs with full auto-approval (flags in the table below). Never configure fine-grained permissioning in the CLI — planning and permissions are the orchestrator's responsibility.
+2. **Login is a precondition.** The tools are already authenticated on the machine. **An authentication error (mention of credential/login/API key/401/403 in the output) completely aborts the orchestrator's task** — no retry, no fallback to another tool, no proceeding with the implementation. Report to the human and stop. An immediate failure with **no** auth signal (unknown flag, incorrect usage) is an **invocation error**, not a login one: check `--help`, fix the command and re-invoke.
+3. **Isolation by the orchestrator:** run the CLI inside a worktree/directory dedicated to the task, never in the main tree.
+4. **Scoped prompt:** a single objective, explicit files/areas, a verifiable completion criterion and a "don't touch X" boundary. One task = one session.
+5. **Timeout always:** wrap every invocation in `timeout <seconds> <command>` — headless CLIs can hang without exiting.
+6. **Parseable output:** ask for JSON format and extract the result, cost and session id; record the id for follow-up.
+7. **Verify the result:** the CLI's output is a claim, not proof — check the diff/tests before accepting.
 
-## Escolha da ferramenta
+## Tool choice
 
-| Se a task precisa de… | Use | Skill |
+| If the task needs… | Use | Skill |
 |---|---|---|
-| Modelos do Cursor (composer) ou multi-modelo com worktree pronta na flag | Cursor CLI | `run-cursor-agent` |
-| Multi-provider (`provider/model`), agents custom leves em markdown, config inline por env | opencode | `run-opencode` |
-| Ecossistema OpenAI: plano ChatGPT/modelos GPT-5.x-codex, AGENTS.md nativo, resposta validada por JSON Schema | Codex CLI | `run-codex` |
-| Catálogo multi-provider da Factory (incl. open models baratos), fail-fast de autonomia, worktree nativa na flag | droid CLI | `run-droid` |
+| Cursor models (composer) or multi-model with a ready-made worktree flag | Cursor CLI | `run-cursor-agent` |
+| Multi-provider (`provider/model`), lightweight custom agents in markdown, inline config via env | opencode | `run-opencode` |
+| OpenAI ecosystem: ChatGPT plan/GPT-5.x-codex models, native AGENTS.md, JSON Schema-validated response | Codex CLI | `run-codex` |
+| Factory's multi-provider catalog (incl. cheap open models), autonomy fail-fast, native worktree flag | droid CLI | `run-droid` |
 
-Desempate: use a ferramenta **instalada** (`command -v cursor-agent opencode codex droid`); entre instaladas, a que já tem contexto no repo (`.cursor/rules/` → cursor; `.opencode/` → opencode; `.factory/` → droid; AGENTS.md → codex ou droid).
+Tiebreaker: use the **installed** tool (`command -v cursor-agent opencode codex droid`); among installed ones, the one that already has context in the repo (`.cursor/rules/` → cursor; `.opencode/` → opencode; `.factory/` → droid; AGENTS.md → codex or droid).
 
-## Flags de yolo por ferramenta
+## Yolo flags per tool
 
-| Ferramenta | Yolo | Observação |
+| Tool | Yolo | Note |
 |---|---|---|
-| Cursor CLI | `--force` | sem ela o agente é read-only; com MCP some `--trust --approve-mcps` |
-| opencode | `--auto` | flag da instalação local; a fonte documenta `--dangerously-skip-permissions` — confirme no `--help`; `deny` explícito em `opencode.json` ainda vence |
-| Codex CLI | `--dangerously-bypass-approvals-and-sandbox` | alias `--yolo`; bypassa aprovações **e** sandbox; sem cap de custo local — o breaker é o `timeout` |
-| droid CLI | `--skip-permissions-unsafe` | não combina com `--auto low\|medium\|high` (escadinha nativa, não usada aqui); sem flag alguma o droid é read-only |
+| Cursor CLI | `--force` | without it the agent is read-only; with MCP add `--trust --approve-mcps` |
+| opencode | `--auto` | flag of the local installation; the source documents `--dangerously-skip-permissions` — confirm with `--help`; an explicit `deny` in `opencode.json` still wins |
+| Codex CLI | `--dangerously-bypass-approvals-and-sandbox` | alias `--yolo`; bypasses approvals **and** the sandbox; no local cost cap — the breaker is the `timeout` |
+| droid CLI | `--skip-permissions-unsafe` | does not combine with `--auto low\|medium\|high` (native ladder, not used here); with no flag at all droid is read-only |
 
-## Checklist antes de invocar
+## Checklist before invoking
 
-- [ ] Ferramenta instalada e logada (falha de auth → **abort total**, regra 2)
-- [ ] Flags conferidas com `--help` na primeira invocação na máquina (versões divergem)
-- [ ] Worktree/diretório isolado da task como cwd
-- [ ] Prompt com objetivo único, critério de conclusão e fronteira
-- [ ] Flag de yolo da ferramenta + `timeout` do SO
-- [ ] Formato JSON e captura do id de sessão
-- [ ] Plano de verificação do resultado (diff, testes)
+- [ ] Tool installed and logged in (auth failure → **total abort**, rule 2)
+- [ ] Flags confirmed with `--help` on the first invocation on the machine (versions diverge)
+- [ ] The task's isolated worktree/directory as cwd
+- [ ] Prompt with a single objective, completion criterion and boundary
+- [ ] The tool's yolo flag + the OS `timeout`
+- [ ] JSON format and session id capture
+- [ ] Plan to verify the result (diff, tests)
 
-## Perfil da invocação
+## Model by effort
 
-Modelo e effort vêm do perfil explícito do coding agent invocado; `size`, `critical` e retornos não os selecionam nem escalam. O executor recebe objetivo, contexto, specs, skill, ownership e critérios suficientes para agir com autonomia; não precisa de reasoning persistido nem microinstruções do planejador. A flag de modelo de cada ferramenta está na skill dela (seção "Modelo"); disponibilidade se confere com o comando de listagem da ferramenta (lookup pontual).
+Use the model fixed by the selected coding-agent harness or explicit human invocation; task size does not select a model. The executor receives objective, context, specs, skill, ownership and criteria sufficient for autonomy; it does not need persisted reasoning or planner micro-instructions.
 
-## Skills desta família
+## Skills in this family
 
-- `run-cursor-agent` — siga para invocar o Cursor CLI headless.
-- `run-opencode` — siga para invocar o opencode headless.
-- `run-codex` — siga para invocar o Codex CLI headless.
-- `run-droid` — siga para invocar o droid CLI (Factory) headless.
-
-Fontes: sínteses em [[researches/cursor-cli-headless/cursor-cli-headless|cursor-cli-headless]], [[researches/opencode-headless/opencode-headless|opencode-headless]] e [[researches/codex-cli-headless/codex-cli-headless|codex-cli-headless]] — siga para rastrear um fato até o bruto; o droid não tem síntese (skill escrita direto das docs oficiais em 2026-07-16).
+- `run-cursor-agent` — follow it to invoke the Cursor CLI headless.
+- `run-opencode` — follow it to invoke opencode headless.
+- `run-codex` — follow it to invoke the Codex CLI headless.
+- `run-droid` — follow it to invoke Factory's droid CLI headless.

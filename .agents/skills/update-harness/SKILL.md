@@ -1,56 +1,56 @@
 ---
 name: update-harness
-description: Verifica se o harness deste repositório está em dia com o PoP original (https://github.com/gabesan21/project-of-projects) e atualiza respeitando o formato — merge git em fork completo, reinstalação gerida em repo included. Use quando o usuário pedir para atualizar o harness, sincronizar com o PoP original ou checar defasagem do fluxo.
+description: Checks whether this repository's harness is up to date with the original PoP (https://github.com/gabesan21/project-of-projects) and updates it respecting the format — git merge for a full fork, managed reinstall for an included repo. Use when the user asks to update the harness, sync with the original PoP or check whether the workflow fell behind.
 ---
 
 # update-harness
 
-Mantém o harness deste repositório em dia com o PoP original, **sem pisar no que é do usuário**. As atualizações do upstream são sempre *mergeadas* com o estado local — nunca sobrescritas cegamente.
+Keeps this repository's harness current with the original PoP **without trampling what belongs to the user**. Upstream changes are always *merged* into the local state — never blindly overwritten.
 
-**Roda fora do kanban, sempre.** Atualização de harness é manutenção do material que o kanban consulta — sem card, branch, worktree ou PR de task (regra 13 e "Escopo corrente" do [[WORKFLOW|WORKFLOW]]).
+**Always runs outside the kanban.** Harness updates are maintenance of the material the kanban consults — no card, branch, worktree or task PR (rule 13 and "Current scope" in [[WORKFLOW|WORKFLOW]]).
 
-## Princípios
+## Principles
 
-- **Confirmação antes de escrever:** a skill verifica e propõe; o humano confirma antes de qualquer merge ou reinstalação. Push, nunca — só por ordem explícita.
-- **Nada é perdido:** fork atualiza por merge git (conflito vira decisão do humano); included atualiza pela reinstalação gerida, que só sobrescreve o conjunto gerido e só poda o que o inventário anterior registrou. Specs, roadmap, memory, notas e arquivos próprios ficam intactos por construção.
-- **Arquivo gerido editado localmente é drift:** se `git status` mostrar modificação local em arquivo do conjunto gerido, reporte ao humano antes de atualizar — a atualização o descarta por design, mas nunca em silêncio.
+- **Confirmation before writing:** the skill checks and proposes; the human confirms before any merge or reinstall. Push, never — only on explicit order.
+- **Nothing is lost:** a fork updates through git merge (a conflict becomes the human's decision); an included repo updates through the managed reinstall, which only overwrites the managed set and only prunes what the previous inventory recorded. Specs, roadmap, memory, notes and the user's own files stay intact by construction.
+- **A managed file edited locally is drift:** if `git status` shows local modifications inside the managed set, report them to the human before updating — the update discards them by design, but never silently.
 
-## 1. Detecte o formato
+## 1. Detect the format
 
-- Existe `pop/.unirepo-harness.json` → **included** (harness instalado por `pop_install_unirepo.py`).
-- Não há marcador e a raiz tem `WORKFLOW.md` + `kanban/` → **fork** (cópia completa do PoP).
-  - Se o remote `origin` já é `https://github.com/gabesan21/project-of-projects`, este repo é um **clone da origem**: atualize com `git pull` comum e encerre.
-- Nenhum dos dois → este repo não usa o PoP; diga isso e pare.
+- `pop/.unirepo-harness.json` exists → **included** (harness installed by `pop_install_unirepo.py`).
+- No marker and the root has `WORKFLOW.md` + `kanban/` → **fork** (a full copy of the PoP).
+  - If the `origin` remote already is `https://github.com/gabesan21/project-of-projects`, this repo is a **clone of the source**: update with a plain `git pull` and stop.
+- Neither → this repo does not use the PoP; say so and stop.
 
-## 2. Verifique a frescor
+## 2. Check freshness
 
 ### Included
 
-O marcador carimba o `content_sha` do harness na origem no momento da instalação.
+The marker stamps the `content_sha` of the harness at the source at install time.
 
-1. Descubra a origem — **pergunte ao humano se não souber**: uma cópia local do PoP (a que instalou este repo) ou o repositório público. Sem origem local conhecida, faça um clone raso do público em pasta temporária: `git clone --depth 1 https://github.com/gabesan21/project-of-projects /tmp/pop-upstream`.
-2. Compare: `python3 <origem>/pop/scripts/pop_install_unirepo.py --sha` com o campo `content_sha` de `pop/.unirepo-harness.json`. Iguais → harness em dia, encerre.
-3. **Aviso de origem diferente:** sha diferente pode significar defasagem *ou* origem distinta da que instalou (outro idioma, outra versão). Reinstalar do repositório público sobre um harness instalado de uma origem em outro idioma **troca o idioma do harness inteiro**. Nesse caso, pare e confirme com o humano antes de seguir.
+1. Find the source — **ask the human if unknown**: a local PoP checkout (the one that installed this repo) or the public repository. With no known local source, make a shallow clone of the public repo into a temporary folder: `git clone --depth 1 https://github.com/gabesan21/project-of-projects /tmp/pop-upstream`.
+2. Compare: `python3 <source>/pop/scripts/pop_install_unirepo.py --sha` against the `content_sha` field in `pop/.unirepo-harness.json`. Equal → harness is current, stop.
+3. **Different-source warning:** a different sha can mean the harness fell behind *or* that the source differs from the one that installed it (another language, another version). Reinstalling from the public repository over a harness installed from a source in another language **switches the language of the entire harness**. In that case, stop and confirm with the human before proceeding.
 
 ### Fork
 
-1. `git remote add upstream https://github.com/gabesan21/project-of-projects` (se ausente) e `git fetch upstream`.
-2. `git log --oneline HEAD..upstream/main` vazio → em dia, encerre. Senão, liste os commits novos para o humano.
+1. `git remote add upstream https://github.com/gabesan21/project-of-projects` (if absent) and `git fetch upstream`.
+2. `git log --oneline HEAD..upstream/main` empty → current, stop. Otherwise, list the new commits for the human.
 
-## 3. Atualize (após confirmação)
+## 3. Update (after confirmation)
 
-### Included → reinstalação gerida
+### Included → managed reinstall
 
-1. `git status` limpo nos arquivos geridos? Se houver edição local neles, reporte o `git diff --stat` antes de prosseguir.
-2. `python3 <origem>/pop/scripts/pop_install_unirepo.py .` — idempotente: sobrescreve só o conjunto gerido e poda só o que o inventário anterior autoriza.
-3. Commit próprio no repo: mensagem curta dizendo que o harness foi atualizado (ex.: `chore: atualiza harness PoP`).
+1. Is `git status` clean on managed files? If any of them carry local edits, show the `git diff --stat` before proceeding.
+2. `python3 <source>/pop/scripts/pop_install_unirepo.py .` — idempotent: overwrites only the managed set and prunes only what the previous inventory authorizes.
+3. Dedicated commit in the repo: a short message stating the harness was updated (e.g. `chore: update PoP harness`).
 
-### Fork → merge git
+### Fork → git merge
 
-1. `git merge upstream/main` na branch padrão do fork. Nunca `reset --hard`, nunca `--ours`/`--theirs` automático.
-2. O upstream só carrega harness — seu conteúdo próprio (projetos, notas, memory) não existe lá, então o merge não o toca.
-3. Conflito → pare e apresente os arquivos em conflito ao humano; a decisão é dele.
+1. `git merge upstream/main` on the fork's default branch. Never `reset --hard`, never automatic `--ours`/`--theirs`.
+2. Upstream only carries harness — your own content (projects, notes, memory) does not exist there, so the merge does not touch it.
+3. Conflict → stop and present the conflicting files to the human; the decision is theirs.
 
-## 4. Reporte
+## 4. Report
 
-Feche com um resumo curto: formato detectado, versão anterior → versão atual (sha ou range de commits), arquivos geridos tocados e qualquer drift descartado com ciência do humano.
+Close with a short summary: detected format, previous version → current version (sha or commit range), managed files touched and any drift discarded with the human's knowledge.

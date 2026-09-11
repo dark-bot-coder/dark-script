@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""pop_recon — relatório de recon determinístico de um diretório de projeto.
+"""pop_recon — deterministic recon report of a project directory.
 
-Gera um inventário (árvore, linguagens/LOC, manifests, hotspots de git,
-entry points/configs/CI e, para bases majoritariamente markdown, um modo
-escrita) para o agente ler **antes** de varrer arquivos manualmente. Zero
-LLM, zero rede, só stdlib (Python >= 3.9) — saída determinística: a mesma
-árvore produz sempre o mesmo texto (sem timestamps, ordenação estável).
+Generates an inventory (tree, languages/LOC, manifests, git hotspots,
+entry points/configs/CI and, for mostly-markdown bases, a writing mode)
+for the agent to read **before** sweeping files by hand. Zero LLM, zero
+network, stdlib only (Python >= 3.9) — deterministic output: the same
+tree always produces the same text (no timestamps, stable ordering).
 """
 
 from __future__ import annotations
@@ -16,10 +16,11 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-# Pastas ignoradas em toda a varredura: controle de versão, dependências
-# instaladas, artefatos do PoP e caches/builds usuais de várias linguagens.
+# Directories ignored in every sweep: version control, installed
+# dependencies, PoP artifacts and the usual caches/builds of several
+# languages.
 IGNORE_DIRS = {
     ".git", "node_modules", "worktrees", "__pycache__", ".venv", "venv",
     "env", "dist", "build", ".next", "target", ".cache", ".pytest_cache",
@@ -30,7 +31,7 @@ IGNORE_DIRS = {
 TREE_MAX_DEPTH = 4
 TREE_MAX_ENTRIES = 40
 HOTSPOTS_TOP_N = 15
-TEXT_READ_LIMIT = 5_000_000  # bytes; acima disso o arquivo não é lido como texto
+TEXT_READ_LIMIT = 5_000_000  # bytes; above this the file is not read as text
 
 CODE_ENTRY_POINTS = (
     "main.py", "__main__.py", "manage.py", "app.py", "wsgi.py", "asgi.py",
@@ -54,11 +55,11 @@ HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
 
 
 # --------------------------------------------------------------------------
-# Descoberta de arquivos
+# File discovery
 # --------------------------------------------------------------------------
 
 def iter_files(root: Path) -> List[Path]:
-    """Todos os arquivos sob `root`, ignorando IGNORE_DIRS, em ordem estável."""
+    """Every file under `root`, skipping IGNORE_DIRS, in stable order."""
     files: List[Path] = []
     stack = [root]
     while stack:
@@ -80,7 +81,7 @@ def iter_files(root: Path) -> List[Path]:
 
 
 def read_text(path: Path) -> Optional[str]:
-    """Lê um arquivo como texto UTF-8; None se binário, ilegível ou grande demais."""
+    """Reads a file as UTF-8 text; None if binary, unreadable or too large."""
     try:
         if path.stat().st_size > TEXT_READ_LIMIT:
             return None
@@ -90,13 +91,13 @@ def read_text(path: Path) -> Optional[str]:
 
 
 # --------------------------------------------------------------------------
-# Seção: árvore anotada truncada
+# Section: truncated annotated tree
 # --------------------------------------------------------------------------
 
 def render_tree(root: Path) -> str:
     lines = [
-        f"Árvore de `{root.name}` (profundidade máx. {TREE_MAX_DEPTH}, "
-        f"até {TREE_MAX_ENTRIES} entradas por pasta; ignora "
+        f"Tree of `{root.name}` (max depth {TREE_MAX_DEPTH}, "
+        f"up to {TREE_MAX_ENTRIES} entries per folder; ignores "
         f"{', '.join(sorted(IGNORE_DIRS))}):",
         "",
     ]
@@ -123,23 +124,23 @@ def _render_dir(root: Path, current: Path, depth: int, prefix: str, out: List[st
         out.append(f"{prefix}{connector}{label}")
         if entry.is_dir():
             if depth + 1 >= TREE_MAX_DEPTH:
-                out.append(f"{prefix}{'    ' if is_last else '│   '}└── ... (profundidade truncada)")
+                out.append(f"{prefix}{'    ' if is_last else '│   '}└── ... (depth truncated)")
             else:
                 extension = "    " if is_last else "│   "
                 _render_dir(root, entry, depth + 1, prefix + extension, out)
     if truncated:
-        out.append(f"{prefix}└── ... (mais entradas truncadas)")
+        out.append(f"{prefix}└── ... (more entries truncated)")
 
 
 # --------------------------------------------------------------------------
-# Seção: linguagens/LOC
+# Section: languages/LOC
 # --------------------------------------------------------------------------
 
 def count_languages(files: List[Path], root: Path) -> Dict[str, Tuple[int, int]]:
-    """Extensão -> (nº arquivos, nº linhas), só para arquivos lidos como texto."""
+    """Extension -> (file count, line count), text-readable files only."""
     counts: Dict[str, Tuple[int, int]] = {}
     for path in files:
-        suffix = path.suffix.lower() or "(sem extensão)"
+        suffix = path.suffix.lower() or "(no extension)"
         text = read_text(path)
         if text is None:
             continue
@@ -151,16 +152,16 @@ def count_languages(files: List[Path], root: Path) -> Dict[str, Tuple[int, int]]
 
 def render_languages(counts: Dict[str, Tuple[int, int]]) -> str:
     if not counts:
-        return "Linguagens/LOC: nenhum arquivo de texto reconhecido."
-    lines = ["Linguagens/LOC (por extensão, arquivos de texto):", ""]
+        return "Languages/LOC: no recognized text file."
+    lines = ["Languages/LOC (by extension, text files):", ""]
     for ext in sorted(counts, key=lambda e: (-counts[e][1], e)):
         n_files, n_lines = counts[ext]
-        lines.append(f"- `{ext}`: {n_files} arquivo(s), {n_lines} linha(s)")
+        lines.append(f"- `{ext}`: {n_files} file(s), {n_lines} line(s)")
     return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
-# Seção: manifests de dependência
+# Section: dependency manifests
 # --------------------------------------------------------------------------
 
 def parse_package_json(text: str) -> List[str]:
@@ -204,10 +205,10 @@ def parse_cargo_toml(text: str) -> List[str]:
 
 
 def parse_pyproject_toml(text: str) -> List[str]:
-    """Extrai dependências de pyproject.toml sem `tomllib` (stdlib só em 3.11+).
+    """Extracts dependencies from pyproject.toml without `tomllib` (stdlib on 3.11+ only).
 
-    Cobre os dois formatos usuais: PEP 621 (`[project]` / `dependencies = [...]`)
-    e Poetry (`[tool.poetry.dependencies]`, tabela chave = versão).
+    Covers the two usual formats: PEP 621 (`[project]` / `dependencies = [...]`)
+    and Poetry (`[tool.poetry.dependencies]`, a key = version table).
     """
     deps: List[str] = []
     project_match = re.search(
@@ -227,7 +228,7 @@ def parse_pyproject_toml(text: str) -> List[str]:
 
 
 def _toml_table_keys(text: str, table: str) -> List[str]:
-    """Chaves de uma tabela TOML simples `[table]` (fallback mínimo, sem libs)."""
+    """Keys of a simple TOML `[table]` (minimal fallback, no libraries)."""
     escaped = re.escape(f"[{table}]")
     match = re.search(rf"^{escaped}\s*$(.*?)(?=^\[|\Z)", text, re.MULTILINE | re.DOTALL)
     if not match:
@@ -254,55 +255,55 @@ MANIFEST_PARSERS = {
 def render_manifests(files: List[Path], root: Path) -> str:
     found = [f for f in files if f.name in MANIFEST_PARSERS]
     if not found:
-        return "Manifests: nenhum manifest reconhecido encontrado."
-    lines = ["Manifests de dependência:", ""]
+        return "Manifests: no recognized manifest found."
+    lines = ["Dependency manifests:", ""]
     for path in sorted(found, key=lambda p: p.relative_to(root).as_posix()):
         text = read_text(path)
         rel = path.relative_to(root).as_posix()
         if text is None:
-            lines.append(f"- `{rel}`: ilegível como texto")
+            lines.append(f"- `{rel}`: unreadable as text")
             continue
         deps = MANIFEST_PARSERS[path.name](text)
         if deps:
             lines.append(f"- `{rel}`: {', '.join(deps)}")
         else:
-            lines.append(f"- `{rel}`: sem dependências detectadas")
+            lines.append(f"- `{rel}`: no dependency detected")
     return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
-# Seção: hotspots por churn git
+# Section: hotspots by git churn
 # --------------------------------------------------------------------------
 
 def render_hotspots(root: Path) -> str:
     if not (root / ".git").exists():
-        return ("Hotspots por churn git: sem repositório git no alvo "
-                "(pasta `.git/` ausente) — seção não disponível.")
+        return ("Hotspots by git churn: no git repository in the target "
+                "(`.git/` folder absent) — section unavailable.")
     try:
         result = subprocess.run(
             ["git", "-C", str(root), "log", "--pretty=format:", "--name-only"],
             capture_output=True, text=True, check=False,
         )
     except OSError:
-        return "Hotspots por churn git: git não disponível no ambiente — seção não disponível."
+        return "Hotspots by git churn: git unavailable in the environment — section unavailable."
     if result.returncode != 0:
-        return "Hotspots por churn git: `git log` falhou — seção não disponível."
+        return "Hotspots by git churn: `git log` failed — section unavailable."
     counts: Dict[str, int] = {}
     for line in result.stdout.splitlines():
         path = line.strip()
         if path:
             counts[path] = counts.get(path, 0) + 1
     if not counts:
-        return "Hotspots por churn git: repositório sem histórico de commits ainda."
+        return "Hotspots by git churn: repository with no commit history yet."
     ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:HOTSPOTS_TOP_N]
-    lines = [f"Hotspots por churn git (top {len(ranked)} por nº de commits):", ""]
+    lines = [f"Hotspots by git churn (top {len(ranked)} by commit count):", ""]
     for path, n in ranked:
         lines.append(f"- `{path}`: {n} commit(s)")
     return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
-# Seção: entry points / configs / CI
+# Section: entry points / configs / CI
 # --------------------------------------------------------------------------
 
 def render_entry_points(files: List[Path], root: Path) -> str:
@@ -319,19 +320,19 @@ def render_entry_points(files: List[Path], root: Path) -> str:
         or Path(rel).name in (".gitlab-ci.yml", "Jenkinsfile", ".travis.yml")
         or rel == ".circleci/config.yml"
     )
-    lines = ["Entry points, configs e CI detectados:", ""]
-    lines.append(f"- Entry points: {', '.join(f'`{p}`' for p in entry_points) if entry_points else 'nenhum detectado'}")
-    lines.append(f"- Configs: {', '.join(f'`{p}`' for p in configs) if configs else 'nenhum detectado'}")
-    lines.append(f"- CI: {', '.join(f'`{p}`' for p in ci_files) if ci_files else 'nenhum detectado'}")
+    lines = ["Entry points, configs and CI detected:", ""]
+    lines.append(f"- Entry points: {', '.join(f'`{p}`' for p in entry_points) if entry_points else 'none detected'}")
+    lines.append(f"- Configs: {', '.join(f'`{p}`' for p in configs) if configs else 'none detected'}")
+    lines.append(f"- CI: {', '.join(f'`{p}`' for p in ci_files) if ci_files else 'none detected'}")
     return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
-# Seção: modo escrita (bases majoritariamente markdown)
+# Section: writing mode (mostly-markdown bases)
 # --------------------------------------------------------------------------
 
 def is_writing_mode(files: List[Path]) -> bool:
-    """Base majoritariamente markdown: > metade dos arquivos de texto contados são `.md`."""
+    """Mostly-markdown base: > half of the counted text files are `.md`."""
     text_exts = [f.suffix.lower() for f in files if f.suffix]
     if not text_exts:
         return False
@@ -344,8 +345,8 @@ def render_writing_mode(files: List[Path], root: Path) -> str:
         (f for f in files if f.suffix.lower() == ".md"),
         key=lambda p: p.relative_to(root).as_posix(),
     )
-    lines = ["Modo escrita (base majoritariamente markdown):", ""]
-    lines.append("Estrutura de capítulos (headings de nível 1-2) e wordcount:")
+    lines = ["Writing mode (mostly-markdown base):", ""]
+    lines.append("Chapter structure (level 1-2 headings) and wordcount:")
     lines.append("")
     frontmatter_inventory = []
     for path in md_files:
@@ -369,38 +370,38 @@ def render_writing_mode(files: List[Path], root: Path) -> str:
             if m and len(m.group(1)) <= 2
         ]
         wordcount = len(body.split())
-        lines.append(f"- `{rel}` ({wordcount} palavras)")
+        lines.append(f"- `{rel}` ({wordcount} words)")
         for heading in headings:
             lines.append(f"  - {heading}")
     lines.append("")
-    lines.append("Inventário de frontmatter:")
+    lines.append("Frontmatter inventory:")
     lines.append("")
     if frontmatter_inventory:
         for rel, keys in frontmatter_inventory:
-            keys_str = ", ".join(keys) if keys else "(vazio)"
+            keys_str = ", ".join(keys) if keys else "(empty)"
             lines.append(f"- `{rel}`: {keys_str}")
     else:
-        lines.append("- nenhum arquivo com frontmatter detectado")
+        lines.append("- no file with frontmatter detected")
     return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
-# Montagem do relatório
+# Report assembly
 # --------------------------------------------------------------------------
 
 def build_report(root: Path) -> str:
     files = iter_files(root)
     sections = [
-        f"# Recon de `{root.name}`",
+        f"# Recon of `{root.name}`",
         "",
-        "Relatório determinístico gerado por `pop_recon.py` — artefato derivado, "
-        "não commitado como fonte de verdade. Leia antes de varrer arquivos.",
+        "Deterministic report generated by `pop_recon.py` — a derived artifact, "
+        "not committed as a source of truth. Read it before sweeping files.",
         "",
-        "## Árvore",
+        "## Tree",
         "",
         render_tree(root),
         "",
-        "## Linguagens/LOC",
+        "## Languages/LOC",
         "",
         render_languages(count_languages(files, root)),
         "",
@@ -417,7 +418,7 @@ def build_report(root: Path) -> str:
         render_entry_points(files, root),
     ]
     if is_writing_mode(files):
-        sections.extend(["", "## Modo escrita", "", render_writing_mode(files, root)])
+        sections.extend(["", "## Writing mode", "", render_writing_mode(files, root)])
     return "\n".join(sections) + "\n"
 
 
@@ -428,16 +429,16 @@ def build_report(root: Path) -> str:
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Gera um relatório de recon determinístico (RECON.md) de um "
-            "diretório de projeto: árvore, linguagens/LOC, manifests, "
-            "hotspots de git, entry points/configs/CI e, para bases "
-            "majoritariamente markdown, modo escrita. Zero LLM, só stdlib."
+            "Generates a deterministic recon report (RECON.md) of a project "
+            "directory: tree, languages/LOC, manifests, git hotspots, entry "
+            "points/configs/CI and, for mostly-markdown bases, writing mode. "
+            "Zero LLM, stdlib only."
         )
     )
-    parser.add_argument("dir", type=Path, help="diretório do projeto a analisar")
+    parser.add_argument("dir", type=Path, help="project directory to analyze")
     parser.add_argument(
         "--output", nargs="?", const="RECON.md", default=None, metavar="PATH",
-        help="grava o relatório em PATH (default do nome: RECON.md) em vez de stdout",
+        help="writes the report to PATH (default name: RECON.md) instead of stdout",
     )
     return parser.parse_args(argv)
 
@@ -446,7 +447,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     target = args.dir.resolve()
     if not target.is_dir():
-        print(f"erro: diretório não encontrado: {target}", file=sys.stderr)
+        print(f"error: directory not found: {target}", file=sys.stderr)
         return 2
     report = build_report(target)
     if args.output:

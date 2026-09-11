@@ -1,46 +1,46 @@
 ---
 name: new-task
-description: Entrevista rápida que cria uma task do roadmap ou de uma modification como pasta em pop/kanban/001_initial_task, com card preenchido, specs linkadas e link na epoch/modification. Use quando o usuário pedir para iniciar/criar uma task ou pedir uma alteração sem card ativo.
+description: Quick interview that creates a task from the roadmap or a modification as a folder in pop/kanban/001_initial_task, with the card filled in, specs linked and a link in the epoch/modification. Use when the user asks to start/create a task or requests a change with no active card.
 ---
 
 # new-task
 
-Materializa uma task do roadmap ou de uma modification como pasta no kanban, no estágio `001_initial_task` — **confirmando com o usuário o essencial antes de criar**. Fluxo completo: [[WORKFLOW|WORKFLOW]].
+Materializes a roadmap or modification task as a folder in the kanban, at stage `001_initial_task` — **confirming the essentials with the user before creating**. Full flow: [[WORKFLOW|WORKFLOW]].
 
-**Modo yolo (sem entrevista):** task de escopo yolo (seção Yolo mode do WORKFLOW) é materializada direto pelo orquestrador — as respostas vêm do roadmap/modifications (descrição da task, dependências da tabela, `critical` do padrão do projeto); pule a entrevista e siga o Procedimento com os ajustes yolo.
+**Yolo mode (no interview):** a yolo-scope task (Yolo mode section of the WORKFLOW) is materialized directly by the orchestrator — the answers come from the roadmap/modifications (task description, dependencies from the table, `critical` from the project's default); skip the interview and follow the Procedure with the yolo adjustments.
 
-**Entrada por pedido de alteração — triagem primeiro:** se o humano pedir para aplicar, executar, corrigir ou finalizar algo e não houver card ativo, aplique a **triagem da regra 13** do [[AGENTS|AGENTS]] antes de criar task: escopo evidente pelo próprio pedido + nenhum contrato durável novo + sem entrevista de planejamento + cabe numa sessão → é **fix direto** (seção "Fix direto" do [[WORKFLOW|WORKFLOW]]: sem card, prova em memory `F-` + specs) e esta skill não roda. Qualquer "não" → kanban (recomendado quando a alteração é grande) ou, se o usuário optar por não usar o kanban, a **rota sem kanban** do [[WORKFLOW|WORKFLOW]] (plan mode do coding agent, tracking sempre em memory `D-` + specs, sem yolo) — e esta skill não roda. “Iniciar o fluxo em yolo” define `yolo: true`, confirma a materialização/liberação e encadeia a rota yolo integral. Reuse tudo que a conversa já respondeu e pergunte só uma ambiguidade indispensável de projeto/origem; yolo ou item do roadmap/modifications → kanban por default, com aviso de uma linha ao usuário.
+**Entry through a change request — triage first:** if the human asks to apply, execute, fix, or finish something and no active card exists, apply the **rule-13 triage** of [[AGENTS|AGENTS]] before creating a task: scope evident from the request itself + no new durable contract + no planning interview + fits in one session → it is a **direct fix** ("Direct fix" section of [[WORKFLOW|WORKFLOW]]: no card, proof in an `F-` memory ledger + specs) and this skill does not run. Any "no" → kanban (recommended when the change is large) or, if the user opts out of the kanban, the **no-kanban route** of [[WORKFLOW|WORKFLOW]] (the coding agent's plan mode, tracking always in `D-` memory + specs, no yolo) — and this skill does not run. “Start the flow in yolo” sets `yolo: true`, confirms materialization/release, and chains the entire yolo route. Reuse everything already answered in the conversation and ask only about an indispensable project/origin ambiguity; yolo or a roadmap/modifications item → kanban by default, with a one-line notice to the user.
 
-**Delegue a subagentes:** quase nada — é entrevista curta com o usuário; a delegação começa no planejamento (`advance-task`).
+**Delegate to subagents:** almost nothing — it is a short interview with the user; delegation begins at planning (`advance-task`).
 
-## Entrevista (pule o que o usuário já respondeu)
+## Interview (skip what the user already answered)
 
-1. **Onde:** qual projeto, e vem do roadmap (phase) ou das modifications? Se o usuário não souber, mostre as phases em andamento da epoch atual e proponha a próxima task natural. **Hotfix, ajuste pontual, correção/alteração de contrato ou feature emergente fora do planejamento:** proponha uma **modification** — aplique a fronteira das 3 perguntas do [[AGENTS|AGENTS]] (cabe em ~3 tasks? cabe num card sem entrevista de planejamento? só toca contratos existentes? — qualquer "não" → roadmap via `plan-roadmap`). **Só o humano cria modification:** proponha `M-<n>` (próximo número livre, nunca reutilizado — confira MODIFICATIONS.md, kanban e memory) e confirme; `size` sugerido default `S`.
-2. **O quê e por quê:** o que a task entrega, em uma linha? Por que agora — o que ela destrava?
-3. **Dependências:** quais tasks precisam estar concluídas antes desta (`depends_on`)? Olhe as tasks da epoch/modification e proponha; vazio = pode rodar em paralelo com as demais. (Gate: só entra em 004 com todas concluídas — ver WORKFLOW.) A task `verificacao-da-phase` depende de **todas** as demais da phase; se a phase não a tiver na tabela, proponha criá-la (seção "Verificação de phase" do WORKFLOW).
-4. **Criticidade:** esta task exige aprovação humana também na verificação (`critical: true`)? Considere o padrão do projeto na ficha (PROJECT.md).
-5. **Specs e pesquisas:** quais contratos duráveis ela afeta? Linke spec existente; tema sem spec só recebe rascunho via `write-spec` se introduzir comportamento, interface ou invariante durável. Decisão técnica sem pesquisa prévia → sugira prompt no `RESEARCHES.md` antes de 002.
-6. **Tamanho:** a mudança cabe em **um brief coeso** (≤~150 linhas, preferencialmente muito menos — ver WORKFLOW)? Se reúne objetivos independentes ou frentes demais para uma DAG legível, **proponha dividir em tasks** encadeadas por `depends_on` — em modification, multi-task ganha arquivo próprio em `pop/modifications/`.
-7. **Effort (`size`):** **proponha** `S | M | L` pelo volume da entrega, justificando em 1 linha. Size não escolhe sozinho a topologia: risco, skills, dependências e write sets determinam executor único ou frentes/ondas; planejador e revisor continuam separados.
-8. Proponha **id e slug** — roadmap: `<n>.<m>.<t>-<slug>` (`t` é o próximo número livre na phase); modification: `M-<n>.<t>-<slug>` (`t` é o próximo livre na modification, começando em 1). Slug kebab-case, único no escopo. Confirme.
+1. **Where:** which project, and does it come from the roadmap (a phase) or from modifications? If the user doesn't know, show the in-progress phases of the current epoch and propose the next natural task. **Hotfix, one-off tweak, contract fix/change or emergent feature outside the plan:** propose a **modification** — apply the 3-question frontier of [[AGENTS|AGENTS]] (fits in ~3 tasks? fits in a card without a planning interview? only touches existing contracts? — any "no" → roadmap via `plan-roadmap`). **Only the human creates a modification:** propose `M-<n>` (next free number, never reused — check MODIFICATIONS.md, the kanban and memory) and confirm; suggested `size` default `S`.
+2. **What and why:** what does the task deliver, in one line? Why now — what does it unblock?
+3. **Dependencies:** which tasks must be completed before this one (`depends_on`)? Look at the epoch/modification's tasks and propose; empty = can run in parallel with the others. (Gate: it only enters 004 with all of them completed — see WORKFLOW.) The `phase-verification` task depends on **all** the phase's other tasks; if the phase does not have it in the table, propose creating it (section "Phase verification" of the WORKFLOW).
+4. **Criticality:** does this task also require human approval at verification (`critical: true`)? Consider the project's default in the sheet (PROJECT.md).
+5. **Specs and research:** which durable contracts does it affect? Link an existing spec; create a draft through `write-spec` only if it introduces durable behavior, interface or invariant. A technical decision without prior research gets a `RESEARCHES.md` prompt before 002.
+6. **Size:** does the change fit in **one cohesive brief** (≤~150 lines, preferably much less)? Independent objectives or too many fronts for a readable DAG → propose tasks chained by `depends_on` — in a modification, multi-task gets its own file in `pop/modifications/`.
+7. **Effort (`size`):** propose `S | M | L` by delivery volume, with one-line rationale. Size alone does not choose topology: risk, skills, dependencies and write sets determine one executor or fronts/waves; planner and reviewer remain separate.
+8. Propose the **id and slug** — roadmap: `<n>.<m>.<t>-<slug>` (`t` is the next free number in the phase); modification: `M-<n>.<t>-<slug>` (`t` is the next free number in the modification, starting at 1). Kebab-case slug, unique in the scope. Confirm.
 
-## Procedimento
+## Procedure
 
-1. Confirme que a task existe (ou adicione-a) na origem:
-   - **Roadmap:** tabela da phase em `pop/roadmap/<n>-<slug-da-epoch>.md`.
-   - **Modifications:** se `pop/MODIFICATIONS.md` não existir, crie-o a partir de `_templates/MODIFICATIONS.md` e adicione a linha `M-<n>`. Modification **multi-task**: crie também `pop/modifications/m-<n>-<slug>.md` a partir de `_templates/MODIFICATION.md` e liste a task lá; modification de **task única** vive só na linha do MODIFICATIONS.md.
-2. Crie a pasta `pop/kanban/001_initial_task/<id>-<slug>/` (escopo com o harness na própria raiz: os mesmos caminhos, sem o prefixo `pop/`) com o card `<id>-<slug>.md` copiado de `_templates/TASK.md`:
-   - Frontmatter completo (`id`, `project`, `origin`, `epoch`/`phase` **ou** `modification`, `stage: 001_initial_task`, `critical`, `yolo`, `size`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, datas) — apague o bloco da origem não usada.
-   - **Resolva a herança yolo** (epoch → phase → marcador da task, ou modification → marcador da task; opt-out ` · yolo: não` vence): herdou/marcou → `yolo: true` + linha no Log com a origem (`yolo herdado da phase X.Y` / `yolo herdado da modification M-N`).
-   - **Estampe o `size`:** marcador ` · size:` da linha da task na origem, ou a sugestão da entrevista (modo yolo sem marcador: sugira você) — sempre com justificativa de 1 linha no Log (`size M sugerido: <motivo>`). O humano corrige à vontade em 001.
-   - "O quê", "Por quê", seção "Dependências" e links de specs preenchidos com as respostas da entrevista; primeira linha do Log.
-   - A seção **Liberação** fica com `- [ ] Pronto para planejar` **desmarcado** — o card nasce não liberado. **Exceção:** task `yolo: true` nasce **marcada**, com Log `liberada por yolo (marcado no roadmap/modifications)`.
-3. Na tabela da epoch ou da modification (ou na linha do MODIFICATIONS.md, se task única), transforme o id da task em wikilink `[[<id>-<slug>]]` e atualize o status para `001_initial_task`.
-4. Se for a primeira task ativa do projeto, verifique se o status do projeto nos INDEX (categoria + raiz) deve mudar para "em andamento".
-5. Feche informando o **gate de liberação**: o card fica em 001 aguardando o humano editar e marcar `- [x] Pronto para planejar` (seção Liberação) — o avanço para 002 (`advance-task`) só acontece depois. **Exceções:** comando explícito “cria e já avança” permite marcar com Log e encadear até 003; “iniciar o fluxo em yolo” ou `yolo: true` permite marcar, registrar a origem e encadear a rota yolo (gate único em 005; 003 só em `critical`). Nenhuma dessas exceções dispensa o card.
+1. Confirm the task exists (or add it) in its origin:
+   - **Roadmap:** the phase table in `pop/roadmap/<n>-<epoch-slug>.md`.
+   - **Modifications:** if `pop/MODIFICATIONS.md` doesn't exist yet, create it from `_templates/MODIFICATIONS.md` and add the `M-<n>` line. A **multi-task** modification also gets `pop/modifications/m-<n>-<slug>.md` from `_templates/MODIFICATION.md`, listing the task there; a **single-task** modification lives only in the MODIFICATIONS.md line.
+2. Create the folder `pop/kanban/001_initial_task/<id>-<slug>/` (a scope whose harness lives at its own root: the same paths, without the `pop/` prefix) with the card `<id>-<slug>.md` copied from `_templates/TASK.md`:
+   - Full frontmatter (`id`, `project`, `origin`, `epoch`/`phase` **or** `modification`, `stage: 001_initial_task`, `critical`, `yolo`, `size`, `blocked: false`, `depends_on: [...]`, `awaiting_merge: false`, dates) — delete the block of the unused origin.
+   - **Resolve the yolo inheritance** (epoch → phase → task marker, or modification → task marker; the ` · yolo: no` opt-out wins): inherited/marked → `yolo: true` + a Log line with the origin (`yolo inherited from phase X.Y` / `yolo inherited from modification M-N`).
+   - **Stamp the `size`:** the ` · size:` marker of the task's line in the origin, or the interview's suggestion (yolo mode without a marker: suggest it yourself) — always with a 1-line justification in the Log (`size M suggested: <reason>`). The human corrects it freely in 001.
+   - "What", "Why", the "Dependencies" section and spec links filled in with the interview answers; first Log line.
+   - The **Release** section stays with `- [ ] Ready to plan` **unchecked** — the card is born unreleased. **Exception:** a `yolo: true` task is born **checked**, with Log `released by yolo (marked on the roadmap/modifications)`.
+3. In the epoch or modification table (or the MODIFICATIONS.md line, if single-task), turn the task id into the wikilink `[[<id>-<slug>]]` and update the status to `001_initial_task`.
+4. If it is the project's first active task, check whether the project status in the INDEX files (category + root) should change to "in progress".
+5. Close by pointing at the **release gate**: the card stays in 001 until the human checks `- [x] Ready to plan`. Explicit “create and advance” may check it with a Log entry and chain to 003; “start the flow in yolo” or `yolo: true` may check it, record the source, and chain the yolo flow (single gate at 005; 003 only for `critical`). None of these exceptions waives the card.
 
-## Cuidados
+## Cautions
 
-- **Leia o AGENTS.md do projeto antes de criar:** restrições declaradas lá valem — p.ex. o gate de organização de projeto importado (Epoch 1 aberta → só tasks de harness: specs, skills, researches, notes em `pop/`).
-- Arquivos de task são linkados **só pelo nome** (`[[1.1.1-user-table-creation]]`, `[[M-1.1-ajusta-contrato]]`), nunca por caminho — a pasta se move entre estágios.
-- Não escreva o plano aqui — isso acontece em `002_planning` via skill `advance-task`.
+- **Read the project's AGENTS.md before creating:** constraints declared there apply — e.g. the organization gate of an imported project (Epoch 1 open → harness tasks only: specs, skills, researches, notes in `pop/`).
+- Task files are linked **by name only** (`[[1.1.1-user-table-creation]]`, `[[M-1.1-adjust-contract]]`), never by path — the folder moves between stages.
+- Don't write the plan here — that happens in `002_planning` via the `advance-task` skill.

@@ -1,40 +1,4 @@
 #!/usr/bin/env python3
-"""pop_move — move uma task entre estágios do kanban.
-
-Encontra a pasta da task em qualquer projeto/estágio, valida a transição
-(001→002→003→004→005_closing; retornos 003→002, 004→002, 005_closing→004 e
-005_closing→002; task `yolo: true` não crítica transita 002→004 direto, sem
-rodada 003 — o 003 do yolo só existe para `critical: true`; `--force` libera
-exceções), move a pasta inteira, atualiza `stage:` e `updated:` no
-frontmatter do card e registra a linha no `## Log`.
-
-O retorno `005_closing→002` é a rota de **defeito de plano**: conta como
-devolução de plano (`yolo_003_returns`), não de execução.
-
-Todo retorno saindo de `005_closing` grava `return_kind:` no card, porque a
-devolução é incremental: o tipo dimensiona a emenda de plano, decide quais
-frentes reentram em 004 e escolhe o modo da re-revisão. `→002` exige
-`--return-kind lacuna|premissa`; `→004` assume `execucao`.
-
-Em task yolo, o retorno saindo de `005_closing` é validado contra os
-marcadores de máquina do `.verify.md` (ver poplib/[[specs/judge-dredd]]):
-o último `pop-verdict` precisa existir e casar com a rota; `aprovada` é
-terminal (não há re-julgamento); veredito com `pontual=true` segue a rota de
-reparo dirigido, não o pop_move; devolução exige o `pop-delta` da rodada. O
-retorno grava `return_base:` (HEAD do repo) e a reentrada `004→005_closing`
-exige que algum caminho do delta tenha mudado desde essa base — reapresentar
-ao juiz sem trabalho no delta é recusado. `--force` sobrepõe cada trava.
-
-Travas (sobrepostas só com `--force`): task com claim ativo de **outro**
-agente não se move (`--by` identifica quem pede, default usuario@host);
-001→002 exige a liberação humana `- [x] Pronto para planejar` no card —
-ou `yolo: true` no frontmatter (a marca no roadmap é a liberação antecipada;
-ver seção Yolo mode do WORKFLOW). O claim vale também para tasks yolo.
-
-Uso:
-    python3 scripts/pop_move.py <task-id> <estágio> [--reason "..."]
-                                [--by NOME] [--force]
-"""
 
 import argparse
 import shutil
@@ -50,7 +14,7 @@ RETURNS = {
     ("005_closing", "002_planning"),
 }
 
-# Retornos que reprovam o plano, não a execução (contador `yolo_003_returns`).
+# Returns that fail the plan, not the execution (`yolo_003_returns` counter).
 PLAN_RETURNS = {
     ("003_human_approval", "002_planning"),
     ("005_closing", "002_planning"),
@@ -58,11 +22,11 @@ PLAN_RETURNS = {
 
 
 def transition_allowed(src, dst, *, yolo_single_gate=False):
-    """True se dst é o próximo estágio de src ou um retorno permitido.
+    """True when dst is src's next stage or a permitted return.
 
-    `yolo_single_gate` (task yolo não crítica) libera o salto 002→004: o
-    gate único de qualidade do yolo é o do 005_closing (ver seção Yolo mode
-    do WORKFLOW).
+    `yolo_single_gate` (non-critical yolo task) allows the 002→004 jump:
+    yolo's single quality gate is the one in 005_closing (see the WORKFLOW's
+    Yolo mode section).
     """
     stages = poplib.STAGES
     if stages.index(dst) == stages.index(src) + 1:
@@ -73,38 +37,39 @@ def transition_allowed(src, dst, *, yolo_single_gate=False):
 
 
 def resolve_return_kind(src, dst, requested):
-    """Classificação a gravar em `return_kind:`, ou (None, mensagem de erro).
+    """Classification to write in `return_kind:`, or (None, error message).
 
-    A devolução é incremental, então o tipo é obrigatório onde ele muda o que
-    acontece depois: `005_closing→002` decide entre emendar o plano (`lacuna`)
-    e replanejar (`premissa`), e essa escolha também define o modo da
-    re-revisão. `005_closing→004` é sempre `execucao`. Nas demais transições o
-    campo não se aplica — em `003→002` nada foi executado ainda.
+    A return is incremental, so the kind is required wherever it changes what
+    happens next: `005_closing→002` decides between amending the plan
+    (`lacuna`) and replanning (`premissa`), and that choice also sets the mode
+    of the re-review. `005_closing→004` is always `execucao`. In every other
+    transition the field does not apply — in `003→002` nothing has been
+    executed yet.
     """
     if (src, dst) == ("005_closing", "002_planning"):
         if requested in ("lacuna", "premissa"):
             return requested, None
-        return None, ("CLASSIFIQUE O RETORNO: defeito de plano exige "
-                      "`--return-kind lacuna` (plano incompleto, o entregue "
-                      "está correto → emenda) ou `--return-kind premissa` "
-                      "(estratégia errada → replanejamento). Sem isso o 002 "
-                      "não sabe o tamanho da correção (use --force para "
-                      "exceções).")
+        return None, ("CLASSIFY THE RETURN: a plan defect requires "
+                      "`--return-kind lacuna` (incomplete plan, what was "
+                      "delivered is correct → amendment) or `--return-kind "
+                      "premissa` (wrong strategy → replanning). Without it "
+                      "002 does not know the size of the fix (use --force for "
+                      "exceptions).")
     if (src, dst) == ("005_closing", "004_processing"):
         if requested in (None, "execucao"):
             return "execucao", None
-        return None, (f"RETORNO INCOMPATÍVEL: `{requested}` classifica defeito "
-                      "de plano e vai para 002_planning; a rota para 004 é "
-                      "sempre `execucao` (use --force para exceções).")
+        return None, (f"INCOMPATIBLE RETURN: `{requested}` classifies a plan "
+                      "defect and goes to 002_planning; the route to 004 is "
+                      "always `execucao` (use --force for exceptions).")
     if requested:
-        return None, (f"`--return-kind` não se aplica a {src} → {dst}: só "
-                      "retornos saindo de 005_closing são classificados "
-                      "(use --force para exceções).")
+        return None, (f"`--return-kind` does not apply to {src} → {dst}: only "
+                      "returns leaving 005_closing are classified (use "
+                      "--force for exceptions).")
     return None, None
 
 
 def git_head(project):
-    """HEAD do repo que contém o projeto, ou None sem git."""
+    """HEAD of the repo containing the project, or None without git."""
     try:
         out = subprocess.run(["git", "-C", str(project), "rev-parse", "HEAD"],
                              capture_output=True, text=True, check=True)
@@ -114,7 +79,7 @@ def git_head(project):
 
 
 def git_changed_paths(project, base):
-    """Arquivos mudados desde `base` (inclui worktree), ou None sem git."""
+    """Files changed since `base` (worktree included), or None without git."""
     try:
         out = subprocess.run(
             ["git", "-C", str(project), "diff", "--name-only", base],
@@ -125,63 +90,66 @@ def git_changed_paths(project, base):
 
 
 def verify_gate_error(task_dir, task_id, dst, return_kind):
-    """Recusa de retorno 005→004/002 pelos marcadores do `.verify.md`.
+    """Refusal of a 005→004/002 return based on the `.verify.md` markers.
 
-    O veredito da rodada é o contrato executável do gate: sem ele o retorno é
-    palpite do orquestrador. As travas cortam os bugs observados em campo
-    (incidente 12.5.5/qr-pagamentos, 2026-08-05): re-julgar aprovação, rota
-    completa para delta pontual e devolução sem delta.
+    The round's verdict is the gate's executable contract: without it the
+    return is the orchestrator's guess. The locks cut off the bugs observed
+    in the field: re-judging an approval, the full route for a pinpoint delta
+    and a return without a delta.
     """
     verify = task_dir / f"{task_id}.verify.md"
     if not verify.is_file():
-        return ("SEM JULGAMENTO: retorno saindo de 005_closing exige "
-                f"`{verify.name}` com o veredito da rodada — juiz que reprova "
-                "sem artefato não devolve (use --force para exceções).")
+        return ("NO JUDGMENT: a return leaving 005_closing requires "
+                f"`{verify.name}` with the round's verdict — a judge that "
+                "rejects without an artifact does not return (use --force "
+                "for exceptions).")
     verdicts, deltas = poplib.parse_verify_markers(
         verify.read_text(encoding="utf-8"))
     if not verdicts:
-        return ("SEM MARCADOR DE VEREDITO: encerre a rodada no "
-                f"`{verify.name}` com `<!-- pop-verdict round=<n> "
-                "decision=... -->` (e `<!-- pop-delta ... -->` ao devolver) "
-                "antes de mover (use --force para exceções).")
+        return ("NO VERDICT MARKER: end the round in the "
+                f"`{verify.name}` with `<!-- pop-verdict round=<n> "
+                "decision=... -->` (and `<!-- pop-delta ... -->` when "
+                "returning) before moving (use --force for exceptions).")
     last = verdicts[-1]
     decision = last.get("decision")
     if decision == "aprovada":
-        return ("APROVAÇÃO É TERMINAL: o último pop-verdict do "
-                f"`{verify.name}` aprova a task — não existe re-julgamento "
-                "nem revisão independente sobre aprovação; siga para "
-                "entrega/encerramento (use --force para exceções).")
+        return ("APPROVAL IS TERMINAL: the last pop-verdict in the "
+                f"`{verify.name}` approves the task — there is no "
+                "re-judgment nor independent review over an approval; "
+                "proceed to delivery/close-out (use --force for exceptions).")
     if decision == "reparo-dirigido":
-        return ("REPARO DIRIGIDO EM ANDAMENTO: delta pontual não vira rota — "
-                "despache o patch e colha o adendo do juiz; só o adendo que "
-                "devolver autoriza mover (use --force para exceções).")
+        return ("DIRECTED REPAIR IN PROGRESS: a pinpoint delta does not "
+                "become a route — dispatch the patch and collect the "
+                "judge's addendum; only an addendum that returns authorizes "
+                "moving (use --force for exceptions).")
     expected = "execucao" if dst == "004_processing" else return_kind
     if decision != expected:
-        return (f"VEREDITO INCOMPATÍVEL: o último pop-verdict declara "
-                f"`{decision}`, mas a rota pedida é `{expected}` — rota e "
-                "veredito andam juntos (use --force para exceções).")
+        return (f"INCOMPATIBLE VERDICT: the last pop-verdict declares "
+                f"`{decision}`, but the requested route is `{expected}` — "
+                "route and verdict go together (use --force for exceptions).")
     delta = deltas.get(last.get("round"))
     if not delta:
-        return ("DEVOLUÇÃO SEM DELTA: o veredito devolve mas falta o "
-                f"`<!-- pop-delta round={last.get('round')} ... -->` no "
-                f"`{verify.name}` — sem delta, 002 não sabe se emenda ou "
-                "replaneja e 004 não sabe o que reexecutar (use --force "
-                "para exceções).")
+        return ("RETURN WITHOUT DELTA: the verdict returns but the "
+                f"`<!-- pop-delta round={last.get('round')} ... -->` is "
+                f"missing from the `{verify.name}` — without a delta, 002 "
+                "does not know whether to amend or replan and 004 does not "
+                "know what to re-execute (use --force for exceptions).")
     if decision == "execucao" and delta.get("pontual") == "true":
-        return ("DELTA PONTUAL: bloqueante `pontual=true` segue a rota "
-                "default de reparo dirigido (sem pop_move, sem contador); a "
-                "rota completa é para defeito difuso — esgotados os 2 "
-                "reparos da rodada, repita com --force e o motivo no "
+        return ("PINPOINT DELTA: a `pontual=true` blocker follows the "
+                "default directed-repair route (no pop_move, no counter); "
+                "the full route is for a diffuse defect — with the round's "
+                "2 repairs exhausted, repeat with --force and the reason in "
                 "--reason.")
     return None
 
 
 def reentry_gate_error(project, task_dir, task_id, meta):
-    """Recusa de reentrada 004→005 sem trabalho nos caminhos do delta.
+    """Refusal of a 004→005 reentry with no work on the delta's paths.
 
-    Só age quando há evidência completa (delta com `paths`, `return_base` e
-    git disponível) — fail-open no resto: a trava existe para cortar a
-    reapresentação do mesmo problema ao juiz, não para bloquear fluxo legado.
+    It only acts when the evidence is complete (a delta with `paths`,
+    `return_base` and git available) — fail-open otherwise: the lock exists
+    to cut off re-presenting the same problem to the judge, not to block
+    legacy flow.
     """
     base = str(meta.get("return_base") or "").strip()
     if not base or meta.get("return_kind") not in poplib.RETURN_KINDS:
@@ -205,14 +173,14 @@ def reentry_gate_error(project, task_dir, task_id, meta):
             if (touched == path or touched.endswith("/" + path)
                     or path.endswith("/" + touched)):
                 return None
-    return ("REENTRADA SEM TRABALHO NO DELTA: nenhum caminho do delta "
-            f"({', '.join(paths)}) mudou desde `return_base` {base[:12]} — "
-            "reapresentar ao juiz com o mesmo problema queima rodada à toa; "
-            "execute o delta antes de mover (use --force para exceções).")
+    return ("REENTRY WITHOUT WORK ON THE DELTA: no delta path "
+            f"({', '.join(paths)}) changed since `return_base` {base[:12]} — "
+            "re-presenting the same problem to the judge burns a round for "
+            "nothing; execute the delta before moving (use --force for "
+            "exceptions).")
 
 
 def update_card(card, new_stage, reason, fields=None):
-    """Atualiza stage:/updated: no frontmatter e appenda no ## Log."""
     lines = card.read_text(encoding="utf-8").splitlines()
     date = poplib.today()
     fields = fields or {}
@@ -238,7 +206,6 @@ def update_card(card, new_stage, reason, fields=None):
 
 
 def append_log(lines, entry):
-    """Insere a entrada no fim da seção ## Log (cria a seção se faltar)."""
     try:
         start = next(i for i, l in enumerate(lines) if l.strip() == "## Log")
     except StopIteration:
@@ -254,41 +221,39 @@ def append_log(lines, entry):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Move a pasta de uma task para outro estágio do kanban, "
-                    "atualizando frontmatter e Log do card.")
-    parser.add_argument("task_id", help="id da task (nome da pasta, ex.: "
+        description="Move a task folder to another kanban stage and update "
+                    "the card frontmatter and log.")
+    parser.add_argument("task_id", help="task ID (folder name, for example "
                                         "1.1.1-user-table-creation)")
     parser.add_argument("stage", choices=poplib.STAGES,
-                        help="estágio de destino")
-    parser.add_argument("--reason", default="transição via pop_move",
-                        help="motivo curto registrado no Log do card")
+                        help="destination stage")
+    parser.add_argument("--reason", default="transition via pop_move",
+                        help="short reason recorded in the card log")
     parser.add_argument("--return-kind", choices=poplib.RETURN_KINDS,
-                        help="classificação do retorno saindo de 005_closing: "
-                             "lacuna|premissa (→002, obrigatório) ou execucao "
+                        help="classification of a return leaving 005_closing: "
+                             "lacuna|premissa (→002, required) or execucao "
                              "(→004, default)")
     parser.add_argument("--context", action="append", default=[],
-                        help="contexto de agente colhido neste estágio; repetível")
+                        help="agent context used at this stage; repeatable")
     parser.add_argument("--test-seconds", type=float, default=0,
-                        help="tempo de testes associado à transição")
+                        help="test time associated with this transition")
     parser.add_argument("--by", default=poplib.default_agent(),
-                        help="identificador do agente (default: usuario@host; "
-                             "mesmo do pop_claim)")
+                        help="agent identifier (default: user@host; same as pop_claim)")
     parser.add_argument("--force", action="store_true",
-                        help="permite transição fora do fluxo padrão e "
-                             "sobrepõe claim/liberação")
+                        help="allow a nonstandard transition and override claim/release")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
-                        help="raiz do vault (default: pasta acima de scripts/)")
+                        help="vault root (default: directory above scripts/)")
     args = parser.parse_args()
 
     root = poplib.vault_root(args.vault)
     found = poplib.find_task(root, args.task_id)
     if not found:
-        print(f"Task não encontrada em nenhum projeto: {args.task_id}")
+        print(f"Task not found in any project: {args.task_id}")
         return 1
     project, src, task_dir = found
     label = poplib.project_label(root, project)
     if src == args.stage:
-        print(f"Task {args.task_id} já está em {src} ({label}).")
+        print(f"Task {args.task_id} is already in {src} ({label}).")
         return 1
     card_src = task_dir / f"{args.task_id}.md"
     meta = poplib.read_card(card_src) if card_src.is_file() else {}
@@ -297,26 +262,26 @@ def main():
     if (not transition_allowed(src, args.stage,
                                yolo_single_gate=yolo_single_gate)
             and not args.force):
-        print(f"Transição não permitida: {src} → {args.stage}. "
-              f"Fluxo: 001→002→003→004→005_closing (yolo não crítica: "
-              f"002→004 direto, sem 003); retornos: 003→002, 004→002, "
-              f"005_closing→004 (execução) e 005_closing→002 (defeito de "
-              f"plano). Use --force para exceções.")
+        print(f"Transition not allowed: {src} → {args.stage}. "
+              f"Flow: 001→002→003→004→005_closing (non-critical yolo: "
+              f"002→004 directly, no 003); returns: 003→002, 004→002, "
+              f"005_closing→004 (execution) and 005_closing→002 (plan "
+              f"defect). Use --force for exceptions.")
         return 1
 
     if card_src.is_file() and not args.force:
         by, at = poplib.parse_claim(meta)
         if by and by != args.by and not poplib.claim_expired(at):
-            print(f"OCUPADA: {args.task_id} tem claim ativo de {by} desde "
-                  f"{at.isoformat(timespec='minutes')} — não mova task de "
-                  f"outro agente (use --force para exceções).")
+            print(f"CLAIMED: {args.task_id} has an active claim by {by} since "
+                  f"{at.isoformat(timespec='minutes')} — do not move another "
+                  f"agent's task (use --force for exceptions).")
             return 1
         if (src == "001_initial_task" and args.stage == "002_planning"
                 and meta.get("yolo") is not True
                 and not poplib.task_released(card_src)):
-            print(f"NÃO LIBERADA: {args.task_id} ainda não tem "
-                  f"`- [x] Pronto para planejar` no card (seção Liberação) — "
-                  f"o humano libera a saída de 001 (use --force para exceções).")
+            print(f"NOT RELEASED: {args.task_id} does not yet have "
+                  f"`- [x] Ready to plan` in the card's Release section — "
+                  f"the human releases stage 001 (use --force for exceptions).")
             return 1
 
     return_gate = None
@@ -360,8 +325,8 @@ def main():
         except (TypeError, ValueError):
             attempts = 0
         if attempts >= poplib.YOLO_RETURN_LIMIT and not args.force:
-            reason = (f"circuit breaker yolo no {return_gate}: terceira "
-                      "reprovação exige diagnóstico humano")
+            reason = (f"yolo circuit breaker at {return_gate}: the third "
+                      "failure requires human diagnosis")
             update_card(card_src, src, reason, {
                 "blocked": "true", "blocked_reason": reason,
                 "circuit_breaker": "true"})
@@ -369,7 +334,7 @@ def main():
                 "event": "circuit_breaker", "stage": src,
                 "gate": return_gate, "contexts": args.context,
                 "test_seconds": args.test_seconds, "result": "blocked"})
-            print(f"BLOQUEADA: {args.task_id} — {reason}.")
+            print(f"BLOCKED: {args.task_id} — {reason}.")
             return 1
         fields[key] = attempts + 1
 
@@ -377,7 +342,7 @@ def main():
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest = dest_dir / args.task_id
     if dest.exists():
-        print(f"Destino já existe: {dest}")
+        print(f"Destination already exists: {dest}")
         return 1
     shutil.move(str(task_dir), str(dest))
 
@@ -390,8 +355,8 @@ def main():
             "return_kind": return_kind,
             "result": "returned" if return_gate else "advanced"})
     else:
-        print(f"[AVISO] card não encontrado para atualizar: {card}")
-    print(f"OK: {args.task_id} ({label}) movida {src} → {args.stage}.")
+        print(f"[WARNING] card not found for update: {card}")
+    print(f"OK: {args.task_id} ({label}) moved {src} → {args.stage}.")
     return 0
 
 

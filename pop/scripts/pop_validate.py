@@ -1,31 +1,4 @@
 #!/usr/bin/env python3
-"""pop_validate — valida os limites e invariantes do vault PoP.
-
-Checa: descrições do INDEX.md raiz (<=144 chars); notas de harness com
-<=150 linhas, raiz de plano com <=80 e
-arquivo de frente em `subtasks/` com <=50 (whitelist
-positiva — só as pastas de harness, nunca o código do produto); anatomia
-`pop/` obrigatória nos projetos de `projects/` (harness na raiz da pasta —
-`kanban/` ou `.unirepo-harness.json` fora de `pop/` — é violação, a
-fronteira da regra 13); frontmatter
-obrigatório dos cards de task e coerência do `stage:` com a pasta; tetos dos
-artefatos do gate adversarial (defesa 30, acusação 50, julgamento 40) e a
-exclusividade entre as duas configurações do ato 1; coerência dos marcadores
-`pop-verdict`/`pop-delta` do `.verify.md` (um juiz por rodada, aprovação
-terminal, devolução com delta); layout de `memory/`
-(pasta por data de conclusão, ledger <=1200 chars, entrada <=800 chars com
-wikilink de evidência e indexada pelo ledger); worktrees
-órfãs (aviso); wikilinks quebrados (aviso — link para nota futura é
-legítimo); e anotações `<!-- pop-hash: <caminho> sha256=<hash> -->` de
-citação de código (fail-closed: arquivo citado inexistente ou hash
-divergente é violação — ver regra 9 do DOX). Coleções com `specs/INDEX.md`
-também recebem validação estrita de metadados, estrutura, supersessão e
-descoberta; coleções sem índice permanecem legadas. Exit 1 se houver violação;
-avisos não falham.
-
-Uso:
-    python3 scripts/pop_validate.py [--vault DIR]
-"""
 
 import argparse
 import datetime
@@ -39,51 +12,53 @@ import pop_roadmap
 
 MAX_ROOT_DESC = 144
 MAX_NOTE_LINES = 150
-MAX_PLAN_LINES = 80      # raiz do plano (`<id>.plan.md`), independente de size
-MAX_FRONT_LINES = 50     # arquivo de frente em `subtasks/`: fatia de 1 executor
-MAX_PROJECT_AGENTS = 60  # AGENTS.md de projeto: ponteiro, não cópia do fluxo
-# Tetos dos artefatos do gate de qualidade (ver [[specs/judge-dredd]], tabela
-# "Interfaces"). A chave é o sufixo do artefato **de task**, nunca o nome de um
-# template: `_templates/TASK-VERIFY.md` segue sendo nota comum de 150. Os três
-# artefatos do gate adversarial aposentado (2026-08-04) mantêm seus tetos
-# porque cards anteriores ao corte podem carregá-los como histórico; o infixo
-# `.r<n>` fica antes do sufixo, então `endswith` já alcança cada rodada.
+MAX_PLAN_LINES = 80      # plan root (`<id>.plan.md`), regardless of size
+MAX_FRONT_LINES = 50     # front file in `subtasks/`: one executor's slice
+MAX_PROJECT_AGENTS = 60  # a project's AGENTS.md: a pointer, not a copy of the flow
+# Caps of the quality-gate artifacts (see [[specs/judge-dredd]], table
+# "Interfaces"). The key is the suffix of the **task** artifact, never a
+# template name: `_templates/TASK-VERIFY.md` remains an ordinary 150-line note.
+# The three artifacts of the adversarial gate retired on 2026-08-04 keep their
+# caps because cards older than the cutoff may carry them as history; the
+# `.r<n>` infix sits before the suffix, so `endswith` already reaches each
+# round.
 GATE_ARTIFACT_LIMITS = {
-    ".verify.md": 80,       # julgamento do Judge Dredd, todas as rodadas
-    ".defense.md": 30,      # histórico: decisões contestáveis do plano
-    ".accusation.md": 50,   # histórico: objeções do advogado do diabo
-    ".judgment.md": 40,     # histórico: julgamento e rota do juiz
+    ".verify.md": 80,       # Judge Dredd's judgment, all rounds
+    ".defense.md": 30,      # history: the plan's contestable decisions
+    ".accusation.md": 50,   # history: the devil's advocate objections
+    ".judgment.md": 40,     # history: the judge's judgment and route
 }
-# Tetos de memory, em **caracteres**: memory é ledger e entrada, não nota, e o
-# que a torna otimizável por agente é o tamanho do arquivo, não o nº de linhas.
-# O ledger é a prova (frontmatter, entrega, verificação, índice); a entrada é
-# uma coisa feita, com evidência linkada (ver [[_templates/MEMORY]] e
-# [[_templates/MEMORY-ENTRY]]). Quem mede memory é `check_memory` — `note_limit`
-# não alcança `memory/`.
+# Memory caps, in **characters**: memory is a ledger and entries, not a note,
+# and what makes it optimizable by an agent is the file size, not the line
+# count. The ledger is the proof (frontmatter, delivery, verification, index);
+# an entry is one thing done, with linked evidence (see [[_templates/MEMORY]]
+# and [[_templates/MEMORY-ENTRY]]). Memory is measured by `check_memory` —
+# `note_limit` does not reach `memory/`.
 MAX_MEMORY_LEDGER = 1200
 MAX_MEMORY_ENTRY = 800
-# Data em que o layout `memory/<AAAA-MM-DD>/` passou a ser obrigatório. Memory
-# plana anterior a ela é legado tolerado — é o que mantém válidos os clones
-# uni-repo, cujas memories este vault não reescreve.
+# Date on which the `memory/<YYYY-MM-DD>/` layout became mandatory. Flat memory
+# older than it is tolerated legacy — that is what keeps `uni-repo` clones
+# valid, whose memories this vault does not rewrite.
 MEMORY_LAYOUT_SINCE = "2026-07-27"
 MEMORY_DATE_DIR = pop_roadmap.MEMORY_DATE_DIR
-# Entrada: `<id>.<nn>-<slug>.md` na mesma pasta do ledger `<id>.md`. O `.`
-# reaproveita a convenção dos artefatos de kanban (`<id>.plan.md`).
+# Entry: `<id>.<nn>-<slug>.md` in the same folder as the ledger `<id>.md`. The
+# `.` reuses the kanban artifact convention (`<id>.plan.md`).
 MEMORY_ENTRY_SUFFIX = re.compile(r"^\.(\d{2}-[a-z0-9][a-z0-9-]*)$")
 VERIFY_ARTIFACT = ".verify.md"
-# Artefatos do gate adversarial aposentado em 2026-08-04: não nascem em card
-# criado a partir do corte; em card anterior são histórico tolerado.
+# Artifacts of the adversarial gate retired on 2026-08-04: they are not born
+# in a card created on or after the cutoff; in an older card they are
+# tolerated history.
 RETIRED_GATE_ARTIFACTS = (".defense.md", ".accusation.md", ".judgment.md")
-# Infixo de rodada dos artefatos do ato 1 (`<id>.r<n>.<artefato>.md`): o que
-# decide a família é o sufixo, nunca a rodada, então toda checagem casa o nome
-# com e sem o infixo.
+# Round infix of the act-1 artifacts (`<id>.r<n>.<artifact>.md`): what decides
+# the family is the suffix, never the round, so every check matches the name
+# with and without the infix.
 ROUND_INFIX = re.compile(r"\.r\d+$")
-# Data em que o Judge Dredd (juiz único) substituiu o gate adversarial (ver
-# [[WORKFLOW]], ato 1 do `005_closing`, "Transição"). Card com `created:`
-# anterior a ela pode carregar defesa/acusação/julgamento como histórico.
+# Date on which the Judge Dredd (single judge) replaced the adversarial gate
+# (see [[WORKFLOW]], act 1 of `005_closing`, "Transition"). A card with an
+# earlier `created:` may carry defense/accusation/judgment as history.
 JUDGE_DREDD_SINCE = "2026-08-04"
-# Aplicação embute o processo DOX e só por isso excede o teto (regra 5).
-DOX_MARKER = "Processo DOX"
+# An application embeds the DOX process and only for that exceeds the cap (rule 5).
+DOX_MARKER = "DOX process"
 EXEMPT_NAMES = {"AGENTS.md", "WORKFLOW.md", "README.md"}
 CARD_REQUIRED = ("id", "project", "stage", "created", "updated")
 ORIGIN_VALUES = ("roadmap", "modifications")
@@ -108,18 +83,17 @@ POP_HASH = re.compile(r"<!--\s*pop-hash:\s*(\S+)\s+sha256=([0-9a-fA-F]+)\s*-->")
 INLINE_CODE = re.compile(r"`[^`]*`")
 LINK_SKIP_PARTS = {"external-repository", ".obsidian", ".git", "worktrees",
                    "__pycache__", "node_modules", "vendor"}
-# Sufixos dos artefatos de estágio da própria task (criados só ao avançar no
-# kanban): um card recém-criado linka `.plan/.approval/.verify` que ainda não
-# nasceram — link de navegação esperado, não quebra real (ver [[WORKFLOW]]).
-# Os artefatos do ato 1 levam infixo de rodada (`<id>.r<n>.accusation`), que
-# `_stage_artifact_base` remove dos dois lados da comparação.
+# Suffixes of the task's own stage artifacts (created only as it advances in
+# the kanban): a freshly created card links `.plan/.approval/.verify` that are
+# not born yet — an expected navigation link, not a real break (see [[WORKFLOW]]).
+# The act-1 artifacts carry a round infix (`<id>.r<n>.accusation`), which
+# `_stage_artifact_base` strips from both sides of the comparison.
 STAGE_ARTIFACT_SUFFIXES = (".plan", ".approval", ".verify",
                            ".defense", ".accusation", ".judgment")
 EXTERNAL_PROJECT_LINK = re.compile(r"\[\[projects/[^/]+/")
 
 
 def _spec_links(path):
-    """Retorna alvos de wikilinks fora de fences, sem alias ou heading."""
     links = []
     for _, line in lines_outside_fences(path):
         for match in WIKILINK.finditer(INLINE_CODE.sub("", line)):
@@ -130,14 +104,12 @@ def _spec_links(path):
 
 
 def _spec_aliases(root, specs_dir, path):
-    """Formas de wikilink aceitas para um documento da coleção."""
     rel_collection = path.relative_to(specs_dir).with_suffix("").as_posix()
     rel_root = path.relative_to(root).with_suffix("").as_posix()
     return {path.stem, rel_collection, rel_root}
 
 
 def _linked_specs(root, specs_dir, source, documents):
-    """Resolve links de `source` somente contra documentos desta coleção."""
     aliases = {}
     for path in documents:
         for alias in _spec_aliases(root, specs_dir, path):
@@ -151,7 +123,6 @@ def _linked_specs(root, specs_dir, source, documents):
 
 
 def _valid_iso_date(value):
-    """Valida data canônica AAAA-MM-DD e devolve date, ou None."""
     raw = str(value or "")
     try:
         parsed = datetime.date.fromisoformat(raw)
@@ -161,12 +132,6 @@ def _valid_iso_date(value):
 
 
 def check_spec_collections(root, projects, violations):
-    """Valida o contrato opt-in das coleções que possuem `specs/INDEX.md`.
-
-    Uma coleção sem índice é legada. Depois da adoção, todo Markdown exceto o
-    índice é spec canônica; contratos atuais devem ser alcançáveis diretamente
-    pelo índice ou por um overview que ele referencia diretamente.
-    """
     for project in projects:
         specs_dir = poplib.harness_root(project) / "specs"
         index = specs_dir / "INDEX.md"
@@ -183,8 +148,8 @@ def check_spec_collections(root, projects, violations):
             rel = path.relative_to(specs_dir)
             if len(rel.parts) > 2:
                 violations.append(
-                    f"{path}:1: spec em profundidade inválida; use no máximo "
-                    "`specs/<domain>/arquivo.md`")
+                    f"{path}:1: spec nesting is invalid; use at most "
+                    "`specs/<domain>/file.md`")
 
             meta, _ = poplib.parse_frontmatter(
                 path.read_text(encoding="utf-8"))
@@ -192,70 +157,70 @@ def check_spec_collections(root, projects, violations):
             for field in SPEC_REQUIRED:
                 if field not in meta:
                     violations.append(
-                        f"{path}:1: frontmatter sem `{field}`")
+                        f"{path}:1: frontmatter missing `{field}`")
                 elif (field not in {"supersedes", "superseded_by"}
                       and meta[field] in (None, "")):
                     violations.append(
-                        f"{path}:1: frontmatter com `{field}` vazio")
+                        f"{path}:1: frontmatter has empty `{field}`")
 
             spec_id = meta.get("id")
             if not isinstance(spec_id, str) or not KEBAB_CASE.fullmatch(spec_id):
-                violations.append(f"{path}:1: `id` inválido `{spec_id}` "
+                violations.append(f"{path}:1: `id` invalid `{spec_id}` "
                                   "(use kebab-case)")
             elif spec_id in ids:
-                violations.append(f"{path}:1: `id` duplicado `{spec_id}` "
-                                  f"(também em {ids[spec_id]})")
+                violations.append(f"{path}:1: duplicate `id` `{spec_id}` "
+                                  f"(also in {ids[spec_id]})")
             else:
                 ids[spec_id] = path
 
-            # Mesmo critério do `memory_valid`: o rótulo separa projetos
-            # irmãos, então só vale onde existem irmãos. Num clone standalone
-            # (escopo == raiz) a spec carrega o rótulo do vault pai, que o
-            # clone não reproduz — basta o campo estar preenchido.
+            # Same criterion as `memory_valid`: the label separates sibling
+            # projects, so it only holds where siblings exist. In a standalone
+            # clone (scope == root) the spec carries the parent vault's label,
+            # which the clone does not reproduce — the field just has to be filled.
             if project == root:
                 if not meta.get("project"):
-                    violations.append(f"{path}:1: `project` vazio")
+                    violations.append(f"{path}:1: empty `project`")
             elif meta.get("project") != expected_project:
                 violations.append(
-                    f"{path}:1: `project` `{meta.get('project')}` difere do "
-                    f"label do escopo `{expected_project}`")
+                    f"{path}:1: `project` `{meta.get('project')}` differs from "
+                    f"scope label `{expected_project}`")
 
             domain = meta.get("domain")
             if not isinstance(domain, str) or not KEBAB_CASE.fullmatch(domain):
-                violations.append(f"{path}:1: `domain` inválido `{domain}` "
+                violations.append(f"{path}:1: `domain` invalid `{domain}` "
                                   "(use kebab-case)")
             elif len(rel.parts) == 2 and domain != rel.parts[0]:
                 violations.append(
-                    f"{path}:1: `domain` `{domain}` difere da pasta "
+                    f"{path}:1: `domain` `{domain}` differs from folder "
                     f"`{rel.parts[0]}`")
 
             for field, accepted in SPEC_ENUMS.items():
                 if meta.get(field) not in accepted:
                     options = " | ".join(sorted(accepted))
                     violations.append(
-                        f"{path}:1: `{field}` inválido `{meta.get(field)}` "
+                        f"{path}:1: `{field}` invalid `{meta.get(field)}` "
                         f"(use {options})")
 
             created = _valid_iso_date(meta.get("created"))
             updated = _valid_iso_date(meta.get("updated"))
             if created is None:
-                violations.append(f"{path}:1: `created` inválido "
-                                  f"`{meta.get('created')}` (use AAAA-MM-DD)")
+                violations.append(f"{path}:1: `created` invalid "
+                                  f"`{meta.get('created')}` (use YYYY-MM-DD)")
             if updated is None:
-                violations.append(f"{path}:1: `updated` inválido "
-                                  f"`{meta.get('updated')}` (use AAAA-MM-DD)")
+                violations.append(f"{path}:1: `updated` invalid "
+                                  f"`{meta.get('updated')}` (use YYYY-MM-DD)")
             if created and updated and updated < created:
-                violations.append(f"{path}:1: `updated` anterior a `created`")
+                violations.append(f"{path}:1: `updated` precedes `created`")
 
             supersedes_value = meta.get("supersedes")
             if not isinstance(supersedes_value, list):
-                violations.append(f"{path}:1: `supersedes` deve ser lista")
+                violations.append(f"{path}:1: `supersedes` must be a list")
             else:
                 for old_id in supersedes_value:
                     if (not isinstance(old_id, str)
                             or not KEBAB_CASE.fullmatch(old_id)):
                         violations.append(
-                            f"{path}:1: ID inválido em `supersedes`: "
+                            f"{path}:1: invalid ID in `supersedes`: "
                             f"`{old_id}`")
 
             replacement_value = meta.get("superseded_by")
@@ -263,8 +228,8 @@ def check_spec_collections(root, projects, violations):
                     and (not isinstance(replacement_value, str)
                          or not KEBAB_CASE.fullmatch(replacement_value))):
                 violations.append(
-                    f"{path}:1: `superseded_by` inválido "
-                    f"`{replacement_value}` (use um ID em kebab-case)")
+                    f"{path}:1: `superseded_by` invalid "
+                    f"`{replacement_value}` (use a kebab-case ID)")
 
         for path, meta in metadata.items():
             spec_id = meta.get("id")
@@ -277,29 +242,29 @@ def check_spec_collections(root, projects, violations):
 
             if status == "superseded" and not replacement:
                 violations.append(
-                    f"{path}:1: spec `superseded` sem `superseded_by`")
+                    f"{path}:1: `superseded` spec missing `superseded_by`")
             if status in {"draft", "active"} and replacement:
                 violations.append(
-                    f"{path}:1: spec `{status}` não pode ter `superseded_by`")
+                    f"{path}:1: spec `{status}` cannot have `superseded_by`")
             if supersedes and status not in {"draft", "active"}:
                 violations.append(
-                    f"{path}:1: spec que substitui outra deve ser draft ou active")
+                    f"{path}:1: a spec that supersedes another must be draft or active")
 
             if replacement:
                 replacement_path = ids.get(replacement)
                 if replacement_path is None:
                     violations.append(
-                        f"{path}:1: `superseded_by` referencia ID inexistente "
+                        f"{path}:1: `superseded_by` references missing ID "
                         f"`{replacement}`")
                 else:
                     replacement_meta = metadata[replacement_path]
                     if replacement_meta.get("status") not in {"draft", "active"}:
                         violations.append(
-                            f"{path}:1: substituta `{replacement}` deve ser "
-                            "draft ou active")
+                            f"{path}:1: replacement `{replacement}` must be "
+                            "draft or active")
                     if spec_id not in (replacement_meta.get("supersedes") or []):
                         violations.append(
-                            f"{path}:1: supersessão não recíproca com "
+                            f"{path}:1: non-reciprocal supersession with "
                             f"`{replacement}`")
 
             for old_id in supersedes:
@@ -308,17 +273,17 @@ def check_spec_collections(root, projects, violations):
                 old_path = ids.get(old_id)
                 if old_path is None:
                     violations.append(
-                        f"{path}:1: `supersedes` referencia ID inexistente "
+                        f"{path}:1: `supersedes` references missing ID "
                         f"`{old_id}`")
                     continue
                 old_meta = metadata[old_path]
                 if old_meta.get("status") != "superseded":
                     violations.append(
-                        f"{path}:1: spec substituída `{old_id}` deve ter status "
+                        f"{path}:1: superseded spec `{old_id}` must have status "
                         "superseded")
                 if old_meta.get("superseded_by") != spec_id:
                     violations.append(
-                        f"{path}:1: supersessão não recíproca com `{old_id}`")
+                        f"{path}:1: non-reciprocal supersession with `{old_id}`")
 
         direct = _linked_specs(root, specs_dir, index, documents)
         via_overview = set()
@@ -330,12 +295,11 @@ def check_spec_collections(root, projects, violations):
         for path, meta in metadata.items():
             if meta.get("status") in {"draft", "active"} and path not in reachable:
                 violations.append(
-                    f"{path}:1: spec `{meta.get('status')}` inalcançável por "
-                    "`specs/INDEX.md` diretamente ou via overview")
+                    f"{path}:1: spec `{meta.get('status')}` unreachable from "
+                    "`specs/INDEX.md` directly or via an overview")
 
 
 def lines_outside_fences(path):
-    """Itera (nº da linha, linha) ignorando blocos de código cercados."""
     in_fence = False
     for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         if line.lstrip().startswith("```"):
@@ -346,31 +310,31 @@ def lines_outside_fences(path):
 
 
 def check_root_index(root, violations):
-    """(a) INDEX.md raiz: descrição de projeto <=144 chars."""
     index = root / "INDEX.md"
     if not index.is_file():
         return
     for n, line in lines_outside_fences(index):
         m = ROOT_ENTRY.match(line.strip())
         if m and len(m.group(1)) > MAX_ROOT_DESC:
-            violations.append(f"{index}:{n}: descrição com {len(m.group(1))} "
-                              f"chars (máx. {MAX_ROOT_DESC})")
+            violations.append(f"{index}:{n}: description has {len(m.group(1))} "
+                              f"characters (max. {MAX_ROOT_DESC})")
 
 
 def note_limit(path):
-    """Limite de linhas do arquivo, ou None se isento.
+    """Line limit for the file, or None when exempt.
 
-    Artefatos de planejamento têm régua própria e mais curta: a raiz do plano
-    é a fatia lida por todo mundo e o arquivo de frente é a fatia lida por um
-    executor. Plano que não couber **modulariza** em `subtasks/`; comprimir ou
-    dividir a task é exceção (ver seção 002 do WORKFLOW). O julgamento do
-    Judge Dredd e os artefatos históricos do gate adversarial seguem a mesma
-    lógica, com os tetos que a spec [[specs/judge-dredd]] fixa.
+    Planning artifacts have their own, shorter ruler: the plan root is the
+    slice everyone reads and the front file is the slice one executor reads. A
+    plan that does not fit **modularizes** into `subtasks/`; compressing it or
+    splitting the task is the exception (see section 002 of the WORKFLOW).
+    Judge Dredd's judgment and the historical artifacts of the retired
+    adversarial gate follow the same logic, with the caps the
+    [[specs/judge-dredd]] spec sets.
     """
     if path.name in EXEMPT_NAMES:
         return None
     if path.name.endswith(".excalidraw.md"):
-        return None  # diagrama Excalidraw: JSON embutido, não é nota
+        return None  # Excalidraw diagram: embedded JSON, not a note.
     for suffix, limit in GATE_ARTIFACT_LIMITS.items():
         if path.name.endswith(suffix):
             return limit
@@ -382,15 +346,7 @@ def note_limit(path):
 
 
 def check_note_sizes(root, projects, violations):
-    """(c) .md de harness <=150 linhas (plano: 80; frente em `subtasks/`: 50).
-
-    Whitelist positiva (`poplib.iter_harness_markdown`): a régua só alcança as
-    pastas de harness de cada escopo descoberto — nunca arquivos do projeto
-    (código, docs do repo, `project/`, vendor, `node_modules`). Cada repo
-    de multi-repo entra como escopo próprio, então seu harness
-    é coberto, mas seu código não. A raiz (meta-projeto `pop`) é só mais um
-    escopo, coberta pelas suas próprias pastas de planejamento.
-    """
+    """Harness .md <=150 lines (plan: 80; front file in `subtasks/`: 50)."""
     for scope in projects:
         for path in poplib.iter_harness_markdown(scope):
             limit = note_limit(path)
@@ -398,51 +354,50 @@ def check_note_sizes(root, projects, violations):
                 continue
             count = len(path.read_text(encoding="utf-8").splitlines())
             if count > limit:
-                violations.append(f"{path}:1: {count} linhas (máx. {limit})")
+                violations.append(f"{path}:1: {count} lines (max. {limit})")
 
 
 def check_card_origin(card, meta, violations):
-    """Frontmatter da origem: roadmap exige epoch/phase; modifications exige
-    `modification: M-<n>` (e não exige epoch/phase). Card antigo sem `origin`
-    é inferido pelo prefixo `M-` do id."""
+    """Origin frontmatter: roadmap requires epoch/phase; modifications
+    requires `modification: M-<n>` (and does not require epoch/phase). An old
+    card without `origin` is inferred from the id's `M-` prefix."""
     origin = meta.get("origin")
     if origin in (None, ""):
         origin = ("modifications"
                   if str(meta.get("id") or "").startswith("M-") else "roadmap")
     elif origin not in ORIGIN_VALUES:
-        violations.append(f"{card}:1: `origin` inválido `{origin}` "
+        violations.append(f"{card}:1: `origin` invalid `{origin}` "
                           f"(use {' | '.join(ORIGIN_VALUES)})")
         return
     if origin == "roadmap":
         for field in ("epoch", "phase"):
             if meta.get(field) in (None, ""):
-                violations.append(f"{card}:1: frontmatter sem `{field}` "
-                                  "(origem roadmap)")
+                violations.append(f"{card}:1: frontmatter missing `{field}` "
+                                  "(roadmap origin)")
     elif not MODIFICATION_REF.fullmatch(str(meta.get("modification") or "")):
-        violations.append(f"{card}:1: `modification` ausente ou inválido "
+        violations.append(f"{card}:1: `modification` missing or invalid "
                           f"`{meta.get('modification')}` (use M-<n>)")
 
 
 def check_cards(root, projects, violations):
-    """(d) cards: frontmatter obrigatório e stage coerente com a pasta."""
     for project in projects:
         for stage, task_dir, card in poplib.iter_cards(project):
             meta = poplib.read_card(card)
             for field in CARD_REQUIRED:
                 if meta.get(field) in (None, ""):
-                    violations.append(f"{card}:1: frontmatter sem `{field}`")
+                    violations.append(f"{card}:1: frontmatter missing `{field}`")
             check_card_origin(card, meta, violations)
             if meta.get("stage") and meta["stage"] != stage:
-                violations.append(f"{card}:1: stage `{meta['stage']}` difere "
-                                  f"da pasta `{stage}`")
+                violations.append(f"{card}:1: stage `{meta['stage']}` differs "
+                                  f"from folder `{stage}`")
             size = meta.get("size")
             if size not in (None, "") and str(size) not in SIZE_VALUES:
-                violations.append(f"{card}:1: `size` inválido `{size}` "
+                violations.append(f"{card}:1: `size` invalid `{size}` "
                                   f"(use S | M | L)")
             kind = meta.get("return_kind")
             if kind not in (None, "") and str(kind) not in poplib.RETURN_KINDS:
                 violations.append(
-                    f"{card}:1: `return_kind` inválido `{kind}` "
+                    f"{card}:1: `return_kind` invalid `{kind}` "
                     f"(use {' | '.join(poplib.RETURN_KINDS)})")
             for gate in ("003", "005"):
                 key = f"yolo_{gate}_returns"
@@ -454,35 +409,37 @@ def check_cards(root, projects, violations):
                     count = -1
                 if count < 0 or count > poplib.YOLO_RETURN_LIMIT:
                     violations.append(
-                        f"{card}:1: `{key}` inválido `{meta[key]}` (use 0..2)")
+                        f"{card}:1: `{key}` invalid `{meta[key]}` (use 0..2)")
             if meta.get("circuit_breaker") is True and meta.get("blocked") is not True:
                 violations.append(
-                    f"{card}:1: circuit breaker exige `blocked: true`")
+                    f"{card}:1: circuit breaker requires `blocked: true`")
             telemetry = poplib.telemetry_path(task_dir)
             if telemetry.is_file():
                 data = poplib.read_telemetry(task_dir)
                 if not data["events"] and telemetry.stat().st_size:
-                    violations.append(f"{telemetry}: telemetria inválida")
+                    violations.append(f"{telemetry}: telemetry invalid")
 
 
 def gate_pair_tolerated(meta):
-    """Card anterior ao corte do Judge Dredd — cláusula de transição.
+    """Card older than the Judge Dredd cutoff — transition clause.
 
-    `created:` anterior a `JUDGE_DREDD_SINCE` significa que a task pode ter
-    passado pelo gate adversarial aposentado, então defesa/acusação/julgamento
-    são histórico tolerado. Usa só campo existente e imutável; `created:`
-    ausente ou inválido não isenta (e já é violação por conta própria).
+    A `created:` earlier than `JUDGE_DREDD_SINCE` means the task may have gone
+    through the retired adversarial gate, so defense/accusation/judgment are
+    tolerated history. It uses only an existing, immutable field; a missing or
+    invalid `created:` grants no exemption (and is already a violation on its
+    own).
     """
     created = _valid_iso_date(meta.get("created"))
     return created is not None and created.isoformat() < JUDGE_DREDD_SINCE
 
 
 def gate_artifacts_of(task_dir):
-    """Artefatos do ato 1 desta task, como pares (caminho, família).
+    """This task's act-1 artifacts, as (path, family) pairs.
 
-    Varre a pasta em vez de casar o nome literal `<id><família>`, porque os
-    artefatos podem nascer por rodada (`<id>.r<n>.accusation.md`). O que decide
-    a família é o sufixo; a rodada só distingue as tentativas.
+    It scans the folder instead of matching the literal name `<id><family>`,
+    because the artifacts may be born per round (`<id>.r<n>.accusation.md`).
+    What decides the family is the suffix; the round only tells the attempts
+    apart.
     """
     found = []
     for path in sorted(task_dir.iterdir()):
@@ -499,17 +456,17 @@ def gate_artifacts_of(task_dir):
 
 
 def check_gate_artifacts(root, projects, violations):
-    """(k) artefatos do gate adversarial aposentado no ato 1 do 005_closing.
+    """(k) artifacts of the retired adversarial gate in act 1 of 005_closing.
 
-    Desde `JUDGE_DREDD_SINCE` o ato 1 é julgado pelo Judge Dredd, juiz único
-    que escreve `.verify.md` para toda task yolo. `.defense.md`,
-    `.accusation.md` e `.judgment.md` não nascem mais: em card criado a partir
-    do corte, qualquer um deles é violação; em card anterior são histórico
-    tolerado. A regra é por família, então vale igual para cada rodada
-    (`<id>.r<n>.<artefato>.md`).
+    Since `JUDGE_DREDD_SINCE`, act 1 is judged by the Judge Dredd, the single
+    judge who writes `.verify.md` for every yolo task. `.defense.md`,
+    `.accusation.md` and `.judgment.md` are no longer born: in a card created
+    on or after the cutoff, any of them is a violation; in an older card they
+    are tolerated history. The rule is per family, so it applies the same to
+    every round (`<id>.r<n>.<artifact>.md`).
 
-    **Ausência nunca é violação** — a regra é de presença indevida do artefato
-    aposentado, jamais de exigência do `.verify.md`.
+    **Absence is never a violation** — the rule is about the undue presence of
+    a retired artifact, never a demand for the `.verify.md`.
     """
     for project in projects:
         for _, task_dir, card in poplib.iter_cards(project):
@@ -519,22 +476,22 @@ def check_gate_artifacts(root, projects, violations):
             for path, family in gate_artifacts_of(task_dir):
                 if family in RETIRED_GATE_ARTIFACTS:
                     violations.append(
-                        f"{path}:1: `{family}` aposentado — desde "
-                        f"{JUDGE_DREDD_SINCE} o ato 1 é o Judge Dredd, que "
-                        f"escreve `.verify.md`; card criado a partir do corte "
-                        f"não produz artefatos do gate adversarial")
+                        f"{path}:1: `{family}` retired — since "
+                        f"{JUDGE_DREDD_SINCE} act 1 is the Judge Dredd, who "
+                        f"writes `.verify.md`; a card created on or after the "
+                        f"cutoff produces no adversarial-gate artifacts")
 
 
 def check_verify_markers(root, projects, violations):
-    """(l) marcadores de veredito do Judge Dredd no `.verify.md`.
+    """(l) Judge Dredd verdict markers in the `.verify.md`.
 
-    O `.verify.md` que usa marcadores de máquina (`pop-verdict`/`pop-delta`,
-    ver [[specs/judge-dredd]]) precisa ser coerente: **um juiz por rodada**
-    (round duplicado é o re-julgamento que estourou o breaker da 12.5.5),
-    **aprovação é terminal** (nenhum veredito depois de `aprovada`) e **toda
-    devolução carrega o pop-delta da própria rodada**. Arquivo sem marcador é
-    legado tolerado — a exigência de presença é do `pop_move`, na hora do
-    retorno; aqui só se valida o que existe.
+    A `.verify.md` that uses machine markers (`pop-verdict`/`pop-delta`, see
+    [[specs/judge-dredd]]) must be coherent: **one judge per round**
+    (a duplicated round is the re-judgment that blew the breaker in the
+    field), **approval is terminal** (no verdict after `aprovada`) and
+    **every return carries its own round's pop-delta**. A file without
+    markers is tolerated legacy — demanding their presence is `pop_move`'s
+    job, at return time; here only what exists is validated.
     """
     for project in projects:
         for _stage, task_dir, _card in poplib.iter_cards(project):
@@ -549,50 +506,48 @@ def check_verify_markers(root, projects, violations):
                 decision = fields.get("decision")
                 if approved:
                     violations.append(
-                        f"{verify}:1: pop-verdict após `aprovada` — aprovação "
-                        "é terminal; re-julgamento não existe")
+                        f"{verify}:1: pop-verdict after `aprovada` — "
+                        "approval is terminal; re-judgment does not exist")
                 if decision not in poplib.VERDICT_DECISIONS:
                     violations.append(
-                        f"{verify}:1: pop-verdict com decision inválida "
+                        f"{verify}:1: pop-verdict with invalid decision "
                         f"`{decision}` (use "
                         f"{' | '.join(poplib.VERDICT_DECISIONS)})")
                 if rnd in seen:
                     violations.append(
-                        f"{verify}:1: pop-verdict duplicado para round "
-                        f"`{rnd}` — um juiz por rodada")
+                        f"{verify}:1: duplicated pop-verdict for round "
+                        f"`{rnd}` — one judge per round")
                 seen.add(rnd)
                 if decision == "aprovada":
                     approved = True
                 elif (decision in poplib.RETURN_KINDS
                         and rnd not in deltas):
                     violations.append(
-                        f"{verify}:1: devolução `{decision}` sem "
-                        f"`pop-delta round={rnd}` — toda devolução carrega "
-                        "delta nomeado")
+                        f"{verify}:1: return `{decision}` without "
+                        f"`pop-delta round={rnd}` — every return carries a "
+                        "named delta")
             for rnd, fields in deltas.items():
                 kind = fields.get("kind")
                 if kind not in poplib.RETURN_KINDS:
                     violations.append(
-                        f"{verify}:1: pop-delta round={rnd} com kind "
-                        f"inválido `{kind}` (use "
+                        f"{verify}:1: pop-delta round={rnd} with invalid "
+                        f"kind `{kind}` (use "
                         f"{' | '.join(poplib.RETURN_KINDS)})")
                 if fields.get("pontual") not in (None, "true", "false"):
                     violations.append(
-                        f"{verify}:1: pop-delta round={rnd} com pontual "
-                        f"inválido `{fields.get('pontual')}` (use true|false)")
+                        f"{verify}:1: pop-delta round={rnd} with invalid "
+                        f"pontual `{fields.get('pontual')}` (use true|false)")
 
 
 def check_release(root, projects, warnings):
-    """(g) card além de 001 sem a liberação marcada (aviso)."""
     for project in projects:
         for stage, task_dir, card in poplib.iter_cards(project):
             if stage != "001_initial_task" and not poplib.task_released(card):
-                warnings.append(f"{card}:1: em {stage} sem `- [x] Pronto "
-                                f"para planejar` — gate de liberação pulado?")
+                warnings.append(f"{card}:1: in {stage} without `- [x] Ready "
+                                f"to plan` — was the release gate skipped?")
 
 
 def check_worktrees(root, projects, warnings):
-    """(e) worktrees não vazias sem task em 004_processing (aviso)."""
     for project in projects:
         harness = poplib.harness_root(project)
         wt_root = harness / "worktrees"
@@ -602,9 +557,9 @@ def check_worktrees(root, projects, warnings):
             if not any(wt.iterdir()):
                 continue
             if project == root and not TASK_DIR.match(wt.name):
-                continue  # worktree de sessão da regra 19, não de task
+                continue  # Rule 19 session worktree, not a task worktree.
             if not (harness / "kanban" / "004_processing" / wt.name).is_dir():
-                warnings.append(f"{wt}: worktree sem task correspondente em "
+                warnings.append(f"{wt}: worktree without a matching task in "
                                 f"004_processing")
 
 
@@ -616,11 +571,11 @@ MEMORY_TASK_ID = re.compile(
 
 
 def _memory_entry_of(stem, ledger_stems):
-    """(task, entry) se `stem` é entrada de algum ledger presente, senão None.
+    """(task, entry) if `stem` is an entry of a present ledger, else None.
 
-    Casar contra os ledgers que existem — em vez de fatiar o nome por regex —
-    é o que resolve `8.1.10-foo`: o id inteiro casa como ledger antes de
-    qualquer tentativa de ler `.10-foo` como número de entrada.
+    Matching against the ledgers that exist — instead of slicing the name by
+    regex — is what resolves `8.1.10-foo`: the whole id matches as a ledger
+    before any attempt to read `.10-foo` as an entry number.
     """
     for task in ledger_stems:
         if not stem.startswith(f"{task}."):
@@ -632,13 +587,13 @@ def _memory_entry_of(stem, ledger_stems):
 
 
 def _check_memory_folder(folder, violations):
-    """Uma pasta de data: um ledger por task e suas entradas subordinadas."""
+    """One date folder: one ledger per task and its subordinate entries."""
     files = [p for p in sorted(folder.iterdir()) if p.suffix == ".md"]
     for path in sorted(folder.iterdir()):
         if path.is_dir():
             violations.append(
-                f"{path}: pasta de data de memory não tem subpasta; ledger e "
-                "entradas ficam lado a lado")
+                f"{path}: a memory date folder has no subfolder; ledger and "
+                "entries sit side by side")
     ledgers = {p.stem: p for p in files if MEMORY_TASK_ID.match(p.stem)}
     ledger_text = {}
     for task, path in sorted(ledgers.items()):
@@ -647,19 +602,19 @@ def _check_memory_folder(folder, violations):
         meta, _ = poplib.parse_frontmatter(text)
         if meta.get("task") != task:
             violations.append(
-                f"{path}:1: `task` `{meta.get('task')}` difere do nome do "
-                f"arquivo `{task}`")
+                f"{path}:1: `task` `{meta.get('task')}` differs from the file "
+                f"name `{task}`")
         for field in pop_roadmap.REQUIRED_MEMORY:
             if meta.get(field) in (None, ""):
-                violations.append(f"{path}:1: ledger sem `{field}`")
+                violations.append(f"{path}:1: ledger without `{field}`")
         if str(meta.get("finished") or "") != folder.name:
             violations.append(
-                f"{path}:1: `finished` `{meta.get('finished')}` difere da "
-                f"pasta `{folder.name}`; a pasta é a data de conclusão")
+                f"{path}:1: `finished` `{meta.get('finished')}` differs from "
+                f"the folder `{folder.name}`; the folder is the completion date")
         if len(text) > MAX_MEMORY_LEDGER:
             violations.append(
-                f"{path}:1: ledger com {len(text)} caracteres "
-                f"(máx. {MAX_MEMORY_LEDGER}) — mova conteúdo para entradas")
+                f"{path}:1: ledger with {len(text)} characters "
+                f"(max. {MAX_MEMORY_LEDGER}) — move content into entries")
 
     for path in files:
         if path.stem in ledgers:
@@ -667,46 +622,47 @@ def _check_memory_folder(folder, violations):
         parsed = _memory_entry_of(path.stem, ledgers)
         if parsed is None:
             violations.append(
-                f"{path}:1: nome fora do layout de memory; use `<id>.md` "
-                "(ledger) ou `<id>.<nn>-<slug>.md` (entrada) com ledger na "
-                "mesma pasta")
+                f"{path}:1: name outside the memory layout; use `<id>.md` "
+                "(ledger) or `<id>.<nn>-<slug>.md` (entry) with the ledger in "
+                "the same folder")
             continue
         task, entry = parsed
         text = path.read_text(encoding="utf-8")
         meta, _ = poplib.parse_frontmatter(text)
         if meta.get("task") != task:
             violations.append(
-                f"{path}:1: `task` `{meta.get('task')}` difere do ledger "
-                f"`{task}`")
+                f"{path}:1: `task` `{meta.get('task')}` differs from the "
+                f"ledger `{task}`")
         if meta.get("entry") != entry:
             violations.append(
-                f"{path}:1: `entry` `{meta.get('entry')}` difere do nome do "
-                f"arquivo `{entry}`")
+                f"{path}:1: `entry` `{meta.get('entry')}` differs from the "
+                f"file name `{entry}`")
         if len(text) > MAX_MEMORY_ENTRY:
             violations.append(
-                f"{path}:1: entrada com {len(text)} caracteres "
-                f"(máx. {MAX_MEMORY_ENTRY}) — quase sempre são duas entradas")
+                f"{path}:1: entry with {len(text)} characters "
+                f"(max. {MAX_MEMORY_ENTRY}) — it is almost always two entries")
         if not WIKILINK.search(text):
             violations.append(
-                f"{path}:1: entrada sem wikilink de evidência; aponte a spec "
-                "ou o arquivo que atesta a mudança")
+                f"{path}:1: entry without an evidence wikilink; point at the "
+                "spec or the file that attests the change")
         if f"[[{path.stem}" not in ledger_text.get(task, ""):
             violations.append(
-                f"{path}:1: entrada órfã — não indexada em `## Entradas` do "
-                f"ledger `{task}.md`")
+                f"{path}:1: orphaned entry — not indexed under `## Entries` of "
+                f"the ledger `{task}.md`")
 
 
 def check_memory(root, projects, violations):
-    """(m) `memory/` no layout granular: pasta de data, ledger e entradas.
+    """(m) `memory/` in the granular layout: date folder, ledger and entries.
 
-    Memory plana em `memory/<id>.md` é legado tolerado enquanto `finished` for
-    anterior a `MEMORY_LAYOUT_SINCE`, e a exigência do layout só alcança o
-    **escopo corrente** (`scope == root`). Escopo aninhado valida a própria
-    memory quando roda o seu `pop_validate`: cobrar aqui o layout de um clone
-    uni-repo seria mandar este vault reescrever memory que não é dele — e a
-    régua nasceria reprovando trabalho em voo lá dentro. O conteúdo das pastas
-    de data, quando existem, é validado em qualquer escopo: aí o layout já foi
-    adotado e o que se checa é coerência, não migração.
+    Flat memory in `memory/<id>.md` is tolerated legacy while `finished` is
+    earlier than `MEMORY_LAYOUT_SINCE`, and the layout requirement only reaches
+    the **current scope** (`scope == root`). A nested scope validates its own
+    memory when it runs its own `pop_validate`: demanding the layout of an
+    `uni-repo` clone here would be telling this vault to rewrite memory that is
+    not its own — and the ruler would be born failing work in flight in there.
+    The content of the date folders, when they exist, is validated in any scope:
+    there the layout has already been adopted and what is checked is coherence,
+    not migration.
     """
     for scope in projects:
         base = poplib.harness_root(scope) / "memory"
@@ -716,8 +672,8 @@ def check_memory(root, projects, violations):
             if child.is_dir():
                 if _valid_iso_date(child.name) is None:
                     violations.append(
-                        f"{child}: pasta de `memory/` deve ser uma data "
-                        "`AAAA-MM-DD` (a data de conclusão da task)")
+                        f"{child}: a `memory/` folder must be a "
+                        "`YYYY-MM-DD` date (the task's completion date)")
                     continue
                 _check_memory_folder(child, violations)
             elif child.suffix == ".md" and scope == root:
@@ -725,56 +681,38 @@ def check_memory(root, projects, violations):
                     child.read_text(encoding="utf-8"))
                 if str(meta.get("finished") or "") >= MEMORY_LAYOUT_SINCE:
                     violations.append(
-                        f"{child}:1: memory solta em `memory/`; desde "
-                        f"{MEMORY_LAYOUT_SINCE} o ledger mora em "
-                        "`memory/<AAAA-MM-DD>/<id>.md`")
+                        f"{child}:1: memory loose in `memory/`; since "
+                        f"{MEMORY_LAYOUT_SINCE} the ledger lives in "
+                        "`memory/<YYYY-MM-DD>/<id>.md`")
 
 
 def check_roadmap_residuals(root, violations):
-    """Task com memory já concluída não pode permanecer no roadmap nem nas
-    modifications (no MODIFICATIONS.md o resíduo é o wikilink da task)."""
+    """A completed task with memory cannot remain in the roadmap or the
+    modifications (in MODIFICATIONS.md the leftover is the task wikilink)."""
     for scope, path, number, task_id in pop_roadmap.residuals(root):
         memory = pop_roadmap.memory_path(root, scope, task_id)
-        # O escopo raiz é o próprio repo validado (meta PoP ou uni-repo
-        # standalone). Escopos aninhados só contam com prova versionada pelo
-        # vault, evitando mutar clones externos gitignorados.
+        # Ignore untracked external clones so validation never mutates their scope.
         if scope != root and not pop_roadmap.tracked(root, memory):
             continue
         violations.append(
-            f"{path}:{number}: task concluída residual `{task_id}` — "
-            "remova a linha (ou o wikilink, no MODIFICATIONS.md) após "
-            "validar a memory")
+            f"{path}:{number}: residual completed task `{task_id}` — "
+            "remove the row (or the wikilink, in MODIFICATIONS.md) after "
+            "validating memory")
 
 
-# Marcadores inequívocos de harness do PoP fora de `pop/`: um projeto legado
-# sempre tem `kanban/` na raiz (qualquer type) ou, se uni-repo, o marcador na
-# raiz. Uma pasta `project/` sem harness é scaffold ainda-não-importado (não é
-# projeto do PoP) — fica de fora, não é violação de anatomia. Nomes genéricos
-# (`scripts/`, `docs/`) que o código do produto pode ter legitimamente também
-# ficam de fora, como manda a whitelist positiva.
+# Legacy harness markers are rejected by the positive anatomy whitelist.
 LEGACY_MARKERS = ("kanban", ".unirepo-harness.json")
 
 
 def _scan_legacy_markers(scope, root, violations):
-    """Reporta marcadores inequívocos de harness fora de `pop/` num escopo."""
     for name in LEGACY_MARKERS:
         if (scope / name).exists():
             violations.append(
-                f"{(scope / name)}: harness fora de `pop/` — anatomia legada / "
-                f"fronteira da regra 13; mova o harness para `pop/`")
+                f"{(scope / name)}: harness outside `pop/` — legacy anatomy / "
+                f"rule boundary 13; move the harness to `pop/`")
 
 
 def check_strict_anatomy(root, violations):
-    """(i) anatomia `pop/` obrigatória nos projetos de `projects/`.
-
-    Num projeto sob `projects/` (e em cada repo de um multi-repo), nenhum
-    artefato inequívoco de harness do PoP pode estar na raiz da pasta:
-    `kanban/` ou `.unirepo-harness.json` fora de `pop/` é violação — o harness
-    inteiro mora em `pop/`. A mãe de multi-repo não tem harness por construção
-    (TYPES.md): sem marcador na raiz, nada a reportar — ela é legítima, não
-    exceção. A raiz do vault (meta-projeto) é isenta: sua anatomia mora na
-    raiz por exceção documentada.
-    """
     projects = root / "projects"
     if not projects.is_dir():
         return
@@ -784,17 +722,17 @@ def check_strict_anatomy(root, violations):
         if any(part.startswith(".") for part in project.relative_to(root).parts):
             continue
         _scan_legacy_markers(project, root, violations)
-        # um nível a mais: repo de multi-repo
+        # one more level: multi-repo repository
         for sub in sorted(project.glob("*")):
             if sub.is_dir() and sub.name != "pop" and not sub.name.startswith("."):
                 _scan_legacy_markers(sub, root, violations)
 
 
 def _stage_artifact_base(stem):
-    """Id da task por trás de um stem de artefato de estágio.
+    """The task id behind a stage-artifact stem.
 
-    Remove o sufixo de artefato e, atrás dele, o infixo de rodada — `<id>`,
-    `<id>.verify` e `<id>.r2.accusation` reduzem todos ao mesmo `<id>`.
+    It strips the artifact suffix and, behind it, the round infix — `<id>`,
+    `<id>.verify` and `<id>.r2.accusation` all reduce to the same `<id>`.
     """
     for suffix in STAGE_ARTIFACT_SUFFIXES:
         if stem.endswith(suffix):
@@ -804,58 +742,43 @@ def _stage_artifact_base(stem):
 
 
 def _is_stage_artifact_of(name, base):
-    """`name` é artefato de estágio da task `base`, com ou sem rodada."""
+    """`name` is a stage artifact of task `base`, with or without a round."""
     return (any(name.endswith(suffix) for suffix in STAGE_ARTIFACT_SUFFIXES)
             and _stage_artifact_base(name) == base)
 
 
 def check_wikilinks(root, warnings):
-    """(f) wikilinks quebrados: alvo sem arquivo correspondente (aviso)."""
     targets = set()
     for path in root.rglob("*"):
         if not path.is_file():
             continue
         rel = path.relative_to(root)
-        # partes relativas à raiz: nome de pasta acima do vault não interfere
         if LINK_SKIP_PARTS & set(rel.parts):
             continue
         rel = rel.as_posix().lower()
         targets.update({path.name.lower(), path.stem.lower(), rel})
         if rel.endswith(".md"):
             targets.add(rel[:-3])
-    # Origem restrita ao harness (whitelist): wikilink quebrado em doc de código
-    # ou vendor é ruído, não sinal. A coleta de ALVOS acima segue a árvore toda,
-    # então um link de harness para um arquivo de código continua resolvendo.
     for path in sorted(poplib.iter_all_harness_markdown(root)):
         if path.name.endswith(".excalidraw.md"):
             continue
         for n, line in lines_outside_fences(path):
             for m in WIKILINK.finditer(INLINE_CODE.sub("", line)):
-                # `\` final: alias com pipe escapado (`[[x\|y]]` em tabela)
+                # A trailing backslash escapes a pipe in table aliases (`[[x\|y]]`).
                 target = m.group(1).strip().rstrip("\\")
-                # pula vazio (link só de heading), placeholder e reticências
                 if not target or "<" in target or set(target) <= {"."}:
                     continue
                 low = target.lower()
                 name = low.rsplit("/", 1)[-1]
                 if {low, f"{low}.md", name} & targets:
                     continue
-                # Link da task para um artefato de estágio irmão ainda não
-                # criado (`<id>.plan|approval|verify`): navegação esperada.
                 src_task = _stage_artifact_base(path.stem.lower())
                 if _is_stage_artifact_of(name, src_task):
                     continue
-                warnings.append(f"{path}:{n}: wikilink quebrado [[{target}]]")
+                warnings.append(f"{path}:{n}: broken wikilink [[{target}]]")
 
 
 def check_hash_pins(root, violations):
-    """(h) anotações pop-hash: arquivo citado existe e o hash confere.
-
-    Fail-closed (regra 9 do DOX): anotação malformada, arquivo citado
-    inexistente ou hash divergente é violação. Caminho é relativo à pasta
-    do arquivo que carrega a anotação; a mensagem de divergência imprime
-    o hash atual para colar após revisar a citação.
-    """
     for path in sorted(root.rglob("*.md")):
         parts = set(path.relative_to(root).parts)
         if parts & LINK_SKIP_PARTS or "_templates" in parts or "raw" in parts:
@@ -864,32 +787,33 @@ def check_hash_pins(root, violations):
             for m in POP_HASH.finditer(line):
                 relpath, digest = m.group(1), m.group(2).lower()
                 if len(digest) != 64:
-                    violations.append(f"{path}:{n}: pop-hash malformado "
-                                      f"(sha256 com {len(digest)} hex, "
-                                      f"esperado 64)")
+                    violations.append(f"{path}:{n}: malformed pop-hash "
+                                      f"(sha256 has {len(digest)} hex digits, "
+                                      f"expected 64)")
                     continue
                 target = (path.parent / relpath).resolve()
                 if not target.is_file():
-                    violations.append(f"{path}:{n}: pop-hash cita arquivo "
-                                      f"inexistente `{relpath}`")
+                    violations.append(f"{path}:{n}: pop-hash cites missing file "
+                                      f"`{relpath}`")
                     continue
                 actual = hashlib.sha256(target.read_bytes()).hexdigest()
                 if actual != digest:
                     violations.append(
-                        f"{path}:{n}: pop-hash divergente para `{relpath}` "
-                        f"— o arquivo citado mudou; revise a citação e "
-                        f"atualize para sha256={actual}")
+                        f"{path}:{n}: pop-hash mismatch for `{relpath}` — "
+                        f"the cited file changed; review the citation and "
+                        f"update to sha256={actual}")
 
 
 def _dox_block_lines(lines):
-    """Linhas do bloco DOX, do heading que carrega o marcador até o próximo
-    heading de nível igual ou superior (ou o fim do arquivo).
+    """Lines of the DOX block, from the heading carrying the marker up to the
+    next heading of equal or higher level (or the end of the file).
 
-    Aplicação embute o processo DOX no AGENTS.md e só por isso passa do teto
-    (regra 5). Delimitar o bloco é o que permite **descontá-lo** em vez de
-    desligar a régua: sem isso, "isento" virava "não medido", e o arquivo
-    crescia sem ninguém reclamar — foi assim que um AGENTS.md de aplicação
-    chegou a 162 linhas de texto que não era DOX.
+    An application embeds the DOX process in its AGENTS.md and only for that
+    reason exceeds the cap (rule 5). Delimiting the block is what allows
+    **discounting** it instead of switching the ruler off: without this,
+    "exempt" became "not measured", and the file grew with nobody complaining —
+    that is how an application's AGENTS.md reached 162 lines of text that was
+    not DOX.
     """
     start = next((n for n, line in enumerate(lines)
                   if line.lstrip().startswith("#") and DOX_MARKER in line), None)
@@ -906,15 +830,15 @@ def _dox_block_lines(lines):
 
 
 def check_project_agents(root, projects, violations, warnings):
-    """(j) AGENTS.md de projeto cabe em 60 linhas — é ponteiro, não cópia.
+    """A project's AGENTS.md fits in 60 lines — it is a pointer, not a copy.
 
-    O arquivo cresce sozinho quando narra o fluxo em vez de linkar o WORKFLOW,
-    e a narração apodrece na primeira mudança de estágio. **A régua mede
-    sempre**: em aplicação, o bloco DOX é descontado (regra 5) e o excedente
-    do resto sai como **aviso**, não violação — a dívida é de quem hospeda o
-    arquivo e se paga no escopo dele, mas não pode ser invisível. Fora de
-    aplicação, o teto continua sendo violação. O AGENTS.md da raiz é o do
-    vault, não de projeto: fora do alcance.
+    The file grows on its own whenever it narrates the flow instead of linking
+    the WORKFLOW, and the narration rots at the first stage change. **The ruler
+    always measures**: in an application the DOX block is discounted (rule 5)
+    and the remaining excess comes out as a **warning**, not a violation — the
+    debt belongs to whoever hosts the file and is paid in their scope, but it
+    must not be invisible. Outside an application, the cap stays a violation.
+    The root AGENTS.md is the vault's, not a project's: out of reach.
     """
     for project in projects:
         if project == root:
@@ -927,20 +851,21 @@ def check_project_agents(root, projects, violations, warnings):
         total = len(lines) - dox
         if total <= MAX_PROJECT_AGENTS:
             continue
-        message = (f"{path}:1: {total} linhas (máx. {MAX_PROJECT_AGENTS}"
-                   f"{f', já descontado o bloco DOX de {dox}' if dox else ''})"
-                   " — aponte para o WORKFLOW em vez de narrar o fluxo")
+        message = (f"{path}:1: {total} lines (max. {MAX_PROJECT_AGENTS}"
+                   f"{f', DOX block of {dox} already discounted' if dox else ''})"
+                   " — point at the WORKFLOW instead of narrating the flow")
         (warnings if dox else violations).append(message)
 
 
 def check_harness_freshness(root, projects, violations):
-    """(i) harness instalado num projeto está na versão da origem.
+    """A harness installed in a project is at the source's version.
 
-    O PoP raiz é a fonte única: um projeto com `pop/.unirepo-harness.json`
-    recebeu uma cópia gerida do WORKFLOW, dos templates e dos scripts. Se o
-    carimbo `content_sha` divergir, aquele projeto está operando um fluxo que
-    o vault já abandonou — falha fechada, porque o remédio é um comando só.
-    Só o vault que **é** a origem faz esta checagem (o clone não se audita).
+    The root PoP is the single source: a project with
+    `pop/.unirepo-harness.json` received a managed copy of the WORKFLOW, the
+    templates and the scripts. If the `content_sha` stamp diverges, that
+    project is running a flow the vault has already abandoned — fail closed,
+    because the remedy is a single command. Only the vault that **is** the
+    source runs this check (a clone does not audit itself).
     """
     try:
         import pop_install_unirepo as installer
@@ -956,48 +881,42 @@ def check_harness_freshness(root, projects, violations):
         label = project.relative_to(root)
         if stamped is None:
             violations.append(
-                f"{marker}: harness sem carimbo `content_sha` — reinstale com "
-                f"`python3 scripts/pop_install_unirepo.py {label}`")
+                f"{marker}: harness without a `content_sha` stamp — reinstall "
+                f"with `python3 scripts/pop_install_unirepo.py {label}`")
         elif stamped != current:
             violations.append(
-                f"{marker}: harness DEFASADO ({stamped[:12]} ≠ origem "
-                f"{current[:12]}) — reinstale com "
+                f"{marker}: harness STALE ({stamped[:12]} ≠ source "
+                f"{current[:12]}) — reinstall with "
                 f"`python3 scripts/pop_install_unirepo.py {label}`")
 
 
 def check_standalone(root, violations):
-    """Contrato estrito para um clone uni-repo, sem fallback ao vault pai.
-
-    O harness mora em `pop/` (`hb`), com o `.unirepo-harness.json` dentro
-    dele; skills ficam sempre na raiz do repo. Sem `pop/` a checagem falha
-    fechada (manifesto ausente).
-    """
     hb = root / "pop"
     manifest_path = hb / ".unirepo-harness.json"
     if not manifest_path.is_file():
-        violations.append(f"{manifest_path}: manifesto standalone ausente")
+        violations.append(f"{manifest_path}: standalone manifest missing")
         return
     try:
         data = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
-        violations.append(f"{manifest_path}: JSON inválido: {error}")
+        violations.append(f"{manifest_path}: JSON invalid: {error}")
         return
     for name in data.get("files", []):
         if not (hb / name).is_file():
-            violations.append(f"{hb / name}: arquivo obrigatório ausente")
+            violations.append(f"{hb / name}: required file missing")
     for name in data.get("directories", []):
         if not (hb / name).is_dir():
-            violations.append(f"{hb / name}: diretório obrigatório ausente")
+            violations.append(f"{hb / name}: required directory missing")
     for name in data.get("skills", []):
         path = root / ".agents/skills" / name / "SKILL.md"
         if not path.is_file():
-            violations.append(f"{path}: skill obrigatória ausente")
+            violations.append(f"{path}: required skill missing")
     for name in data.get("anatomy", []):
         if not (hb / name).is_dir():
-            violations.append(f"{hb / name}: anatomia obrigatória ausente")
+            violations.append(f"{hb / name}: required anatomy directory missing")
     for name in data.get("keep_files", []):
         if not (hb / name).is_file():
-            violations.append(f"{hb / name}: marcador Git obrigatório ausente")
+            violations.append(f"{hb / name}: required Git marker missing")
     for path in root.rglob("*.md"):
         parts = set(path.relative_to(root).parts)
         if parts & {".git", "worktrees", "kanban"}:
@@ -1005,19 +924,18 @@ def check_standalone(root, violations):
         for n, line in lines_outside_fences(path):
             if EXTERNAL_PROJECT_LINK.search(line):
                 violations.append(
-                    f"{path}:{n}: link aponta para fora do escopo")
+                    f"{path}:{n}: link points outside the scope")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Valida limites do vault: 144 chars, 150 linhas, "
-                    "frontmatter dos cards, worktrees órfãs, wikilinks "
-                    "quebrados, specs adotadas e anotações pop-hash de "
-                    "citação de código.")
+        description="Validate vault limits: 144 characters, 150 lines, "
+                    "card frontmatter, orphaned worktrees, broken wikilinks, "
+                    "adopted specs, and pop-hash code citations.")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
-                        help="raiz do vault (default: pasta acima de scripts/)")
+                        help="vault root (default: directory above scripts/)")
     parser.add_argument("--standalone", action="store_true",
-                        help="falha fechada para o contrato uni-repo local")
+                        help="fail closed for the local uni-repo contract")
     args = parser.parse_args()
 
     root = poplib.vault_root(args.vault)
@@ -1043,16 +961,16 @@ def main():
         check_standalone(root, violations)
 
     for w in warnings:
-        print(f"[AVISO] {w}")
+        print(f"[WARNING] {w}")
     for v in violations:
-        print(f"[VIOLAÇÃO] {v}")
+        print(f"[VIOLATION] {v}")
     if violations:
-        print(f"\n{len(violations)} violação(ões) encontrada(s).")
+        print(f"\n{len(violations)} violation(s) found.")
         return 1
     if args.standalone:
-        print("standalone válido")
-    print("Vault válido — nenhuma violação encontrada."
-          + (f" ({len(warnings)} aviso(s).)" if warnings else ""))
+        print("standalone valid")
+    print("Vault valid — no violations found."
+          + (f" ({len(warnings)} warning(s).)" if warnings else ""))
     return 0
 
 

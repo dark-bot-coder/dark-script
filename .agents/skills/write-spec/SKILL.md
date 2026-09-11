@@ -1,35 +1,37 @@
 ---
 name: write-spec
-description: Padroniza a criação de specs para qualquer tipo de projeto (software, escrita, negócio, pesquisa...), guiando o usuário com perguntas certas para o tipo. Use ao criar ou reescrever uma spec.
+description: Standardizes spec creation for any kind of project (software, writing, business, research...), guiding the user with the right questions for the type. Use when creating or rewriting a spec.
 ---
 
 # write-spec
 
-Cria uma spec em `pop/specs/` (escopo com o harness na própria raiz: os mesmos caminhos, sem o prefixo `pop/`) a partir de `_templates/SPEC.md`, entrevistando o usuário com as perguntas certas para o tipo de projeto. Uma spec responde a **uma** pergunta; se começar a responder duas, são duas specs.
+A spec records a **durable contract**, not the contingent implementation chosen for one task. Prefer behavior, invariants, promised interfaces, errors/limits and objective conformance criteria. Do not persist chain-of-thought, pseudocode, edit sequences or speculative snippets.
 
-**Delegue a subagentes:** quase nada — é entrevista; leitura ampla de material existente para embasar a spec vai a subagente com pergunta específica e resposta ≤30 linhas.
+Creates a spec in `pop/specs/` (a scope whose harness lives at its own root: the same paths, without the `pop/` prefix) from `_templates/SPEC.md`, interviewing the user with the right questions for the project type. A spec answers **one** question; if it starts answering two, it is two specs.
 
-## Procedimento
+**Delegate to subagents:** almost nothing — it is an interview; broad reading of existing material to ground the spec goes to a subagent with a specific question and an answer ≤30 lines.
 
-1. **Delimite o tema:** confirme com o usuário em uma frase o que a spec cobre — e o que fica de fora (seção "Fora de escopo").
-2. **Entreviste conforme o tipo** (2–3 perguntas por vez; adapte para tipos não listados):
-   - **Software:** comportamento esperado, dados envolvidos, casos de erro, integrações, o que é "pronto".
-   - **Escrita:** público-alvo, tom, estrutura/seções, fontes, tamanho alvo, critério de qualidade.
-   - **Negócio/processo:** etapas, responsáveis, entradas/saídas, métricas de sucesso, riscos.
-   - **Pesquisa:** perguntas a responder, método, fontes aceitáveis, critério de suficiência (quando parar).
-   - **Pessoal/hábito:** resultado desejado, gatilhos, frequência, como medir progresso.
-3. **Escreva requisitos verificáveis:** cada requisito deve permitir responder "isso é verdade?" com sim/não. "Texto bom" não é requisito; "cada capítulo ≤3.000 palavras com abertura narrativa" é.
-4. **Incertezas não travam:** o que o usuário não sabe vai para a seção "Aberto" — a spec nasce como `rascunho` e evolui.
-5. **Linke:** phase do roadmap, tasks relacionadas, outras specs. Nome do arquivo em kebab-case.
-6. **Pare no contrato:** registre comportamento, invariantes, interfaces, erros e conformidade. Estratégia desta mudança fica no plano; procedimento reutilizável, em skill; código só entra quando é a própria interface prometida.
+## Procedure
 
-## Ciclo de vida (ver skill `sync-specs`)
+1. **Scope the topic:** confirm with the user in one sentence what the spec covers — and what stays out ("Out of scope" section).
+2. **Interview by type** (2–3 questions at a time; adapt for unlisted types):
+   - **Software:** expected behavior, data involved, error cases, integrations, what "done" means.
+   - **Writing:** target audience, tone, structure/sections, sources, target length, quality criterion.
+   - **Business/process:** steps, owners, inputs/outputs, success metrics, risks.
+   - **Research:** questions to answer, method, acceptable sources, sufficiency criterion (when to stop).
+   - **Personal/habit:** desired outcome, triggers, frequency, how to measure progress.
+3. **Write verifiable requirements:** each requirement must make it possible to answer "is this true?" with yes/no. "Good text" is not a requirement; "each chapter ≤3,000 words with a narrative opening" is.
+4. **Uncertainties don't block:** what the user doesn't know goes to the "Open" section — the spec is born as `draft` and evolves.
+5. **Link:** roadmap phase, related tasks, other specs. File name in kebab-case.
+6. **Stop at the contract:** record behavior, invariants, interfaces, errors and conformance. Change strategy stays in the plan; reusable procedure in a skill; code appears only when it is itself the promised interface.
 
-`rascunho` → `aprovada` (junto com o gate 003 da primeira task que a implementa, ou aprovação direta do usuário) → `implementada` (quando a realidade corresponde à spec) → `obsoleta` (com link para a substituta).
+## Lifecycle (see the `sync-specs` skill)
 
-## Cuidados
+`draft` → `approved` (together with the 003 gate of the first task that implements it, or direct user approval) → `implemented` (when reality matches the spec) → `obsolete` (with a link to the replacement).
 
-- ≤150 linhas; se crescer, extraia specs auxiliares e linke.
-- Fora de escopo explícito evita a spec inchar depois.
-- Não antecipe classes, funções, camadas ou sequência de implementação que o contrato não exige.
-- Nunca deixe placeholder `<...>` sobrando.
+## Cautions
+
+- ≤150 lines; if it grows, extract auxiliary specs and link them.
+- An explicit out-of-scope keeps the spec from bloating later.
+- Do not anticipate classes, functions, layers or implementation order the contract does not require.
+- Never leave a `<...>` placeholder behind.

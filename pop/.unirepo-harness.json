@@ -148,7 +148,7 @@
     "pop/kanban",
     "pop/worktrees/.gitkeep"
   ],
-  "content_sha": "edee8f387e1c9870342e0cee3468c503d1cf2990af3adf5d4e3a4f44fbcdd2be",
+  "content_sha": "29eed1f3d40114a77586e2988f6a57eb061a7c23f112ff1b45b9321e027abd09",
   "installed": [
     ".agents/agents/pop-execution-orchestrator.md",
     ".agents/agents/pop-executor.md",
@@ -257,7 +257,6 @@
     "pop/scripts/pop_worktree.py",
     "pop/scripts/pop_yolo.py",
     "pop/scripts/poplib.py",
-    "pop/scripts/validate_kanban_agents.py",
     "pop/scripts/validate_local_agents.py"
   ]
 }

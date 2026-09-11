@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""pop_task — scaffolding de uma task nova em 001_initial_task.
+"""pop_task — scaffolding for a new task in 001_initial_task.
 
-Cria `kanban/001_initial_task/<id>/<id>.md` no harness do projeto indicado
-(`pop/kanban/...` na anatomia nova, `kanban/...` na legada) a partir de
-`_templates/TASK.md`, preenchendo id, project, origem (epoch/phase do roadmap
-ou modification), datas e título, e cria a pasta `subtasks/` vazia. Recusa se
-a task já existir em qualquer projeto/estágio (ids são únicos no vault).
+Creates `kanban/001_initial_task/<id>/<id>.md` in the indicated project's
+harness (`pop/kanban/...` in the new anatomy, `kanban/...` in the legacy one)
+from `_templates/TASK.md`, filling in id, project, origin (roadmap epoch/phase
+or modification), dates and title, and creates an empty `subtasks/` folder.
+Refuses if the task already exists in any project/stage (ids are unique
+across the vault).
 
-Duas origens de id: roadmap `<epoch>.<phase>.<task>-<slug>` (ex.:
-1.2.3-user-table) e modifications `M-<modification>.<task>-<slug>` (ex.:
-M-1.1-ajusta-contrato — task 1 da modification M-1).
+Two id origins: roadmap `<epoch>.<phase>.<task>-<slug>` (e.g.
+1.2.3-user-table) and modifications `M-<modification>.<task>-<slug>` (e.g.
+M-1.1-adjust-contract — task 1 of modification M-1).
 
-Uso:
-    python3 scripts/pop_task.py <projeto> <task-id> [--title "..."]
-    ex.: python3 scripts/pop_task.py meu-projeto 1.2.3-user-table-creation
-         python3 scripts/pop_task.py meu-projeto M-1.1-ajusta-contrato
-    Repo de multi-repo: <projeto>/<repo>.
+Usage:
+    python3 scripts/pop_task.py <project> <task-id> [--title "..."]
+    e.g.: python3 scripts/pop_task.py my-project 1.2.3-user-table-creation
+          python3 scripts/pop_task.py my-project M-1.1-adjust-contract
+    Multi-repo repository: <project>/<repo>.
 """
 
 import argparse
@@ -29,12 +30,12 @@ MODIFICATION_ID = re.compile(r"^M-(\d+)\.(\d+)-([a-z0-9][a-z0-9-]*)$")
 
 
 def fill_template(template, task_id, project, title):
-    """Substitui os placeholders óbvios do _templates/TASK.md.
+    """Replaces the obvious placeholders of _templates/TASK.md.
 
-    Preenche só o bloco de frontmatter da origem da task e apaga o da origem
-    não usada, como o template instrui: roadmap fica com `epoch`/`phase`
-    (sem `modification`); modifications fica com `modification: M-<n>`
-    (sem `epoch`/`phase`).
+    Fills only the frontmatter block of the task's origin and deletes the
+    unused one, as the template instructs: roadmap keeps `epoch`/`phase`
+    (no `modification`); modifications keeps `modification: M-<n>`
+    (no `epoch`/`phase`).
     """
     date = poplib.today()
     roadmap = ROADMAP_ID.match(task_id)
@@ -60,13 +61,13 @@ def fill_template(template, task_id, project, title):
             ("M-<n>", f"M-{mod_n}"),
         ]
     pairs += [
-        ("<projeto>", project),
+        ("<project>", project),
         ("<id>-<slug>", task_id),
-        ("<título curto>", title or slug.replace("-", " ")),
-        ("created: AAAA-MM-DD", f"created: {date}"),
-        ("updated: AAAA-MM-DD", f"updated: {date}"),
-        ("- AAAA-MM-DD — criada em 001_initial_task — <motivo/origem>",
-         f"- {date} — criada em 001_initial_task — via pop_task"),
+        ("<short title>", title or slug.replace("-", " ")),
+        ("created: YYYY-MM-DD", f"created: {date}"),
+        ("updated: YYYY-MM-DD", f"updated: {date}"),
+        ("- YYYY-MM-DD — created in 001_initial_task — <reason/origin>",
+         f"- {date} — created in 001_initial_task — via pop_task"),
     ]
     for old, new in pairs:
         text = text.replace(old, new)
@@ -75,42 +76,42 @@ def fill_template(template, task_id, project, title):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Cria a pasta e o card de uma task nova em "
-                    "kanban/001_initial_task, a partir de _templates/TASK.md.")
-    parser.add_argument("project", metavar="PROJETO",
-                        help="projeto de destino (ex.: meu-projeto; "
-                             "repo de multi-repo: meu-app/frontend)")
+        description="Creates the folder and card of a new task in "
+                    "kanban/001_initial_task, from _templates/TASK.md.")
+    parser.add_argument("project", metavar="PROJECT",
+                        help="destination project (e.g. my-project; "
+                             "multi-repo repository: my-app/frontend)")
     parser.add_argument("task_id", metavar="TASK-ID",
-                        help="id completo da task (ex.: 1.2.3-user-table-creation "
-                             "ou M-1.1-ajusta-contrato)")
-    parser.add_argument("--title", help="título curto do card "
-                                        "(default: slug com espaços)")
+                        help="full task id (e.g. 1.2.3-user-table-creation "
+                             "or M-1.1-adjust-contract)")
+    parser.add_argument("--title", help="short card title "
+                                        "(default: slug with spaces)")
     parser.add_argument("--scope", "--vault", dest="vault", metavar="DIR",
-                        help="raiz do vault (default: pasta acima de scripts/)")
+                        help="vault root (default: folder above scripts/)")
     args = parser.parse_args()
 
     modification = MODIFICATION_ID.match(args.task_id)
     if not modification and not ROADMAP_ID.match(args.task_id):
-        print(f"Id inválido: {args.task_id} — esperado "
-              f"<epoch>.<phase>.<task>-<slug-kebab> (ex.: 1.2.3-user-table) ou "
-              f"M-<modification>.<task>-<slug-kebab> (ex.: M-1.1-ajusta-contrato).")
+        print(f"Invalid id: {args.task_id} — expected "
+              f"<epoch>.<phase>.<task>-<kebab-slug> (e.g. 1.2.3-user-table) or "
+              f"M-<modification>.<task>-<kebab-slug> (e.g. M-1.1-adjust-contract).")
         return 1
 
     root = poplib.vault_root(args.vault)
     project_dir = poplib.project_dir(root, args.project)
-    harness = poplib.harness_root(project_dir)  # pop/ na anatomia nova
+    harness = poplib.harness_root(project_dir)  # pop/ in the new anatomy
     if not (harness / "kanban").is_dir():
-        print(f"Projeto sem kanban/ (nem pop/kanban/): {project_dir} — "
-              f"confira <projeto>[/<repo>].")
+        print(f"Project without kanban/ (nor pop/kanban/): {project_dir} — "
+              f"check <project>[/<repo>].")
         return 1
     existing = poplib.find_task(root, args.task_id)
     if existing:
         _, stage, task_dir = existing
-        print(f"Task já existe em {stage}: {task_dir}")
+        print(f"Task already exists in {stage}: {task_dir}")
         return 1
     template_path = poplib.templates_dir(root) / "TASK.md"
     if not template_path.is_file():
-        print(f"Template não encontrado: {template_path}")
+        print(f"Template not found: {template_path}")
         return 1
 
     task_dir = harness / "kanban" / "001_initial_task" / args.task_id
@@ -121,17 +122,17 @@ def main():
         fill_template(template_path.read_text(encoding="utf-8"),
                       args.task_id, args.project, args.title),
         encoding="utf-8")
-    print(f"OK: task criada em {card}")
+    print(f"OK: task created at {card}")
     if modification:
-        print("Lembrete: preencha 'O quê', 'Por quê' e depends_on, e linke "
-              "[[{}]] na modification (MODIFICATIONS.md ou "
+        print("Reminder: fill in 'What', 'Why' and depends_on, and link "
+              "[[{}]] in the modification (MODIFICATIONS.md or "
               "modifications/m-{}-*.md).".format(args.task_id,
                                                  modification.group(1)))
     else:
-        print("Lembrete: preencha 'O quê', 'Por quê' e depends_on, e linke "
-              "[[{}]] no arquivo da epoch.".format(args.task_id))
-    print("A task só sai de 001 quando o humano marcar "
-          "`- [x] Pronto para planejar` (seção Liberação do card).")
+        print("Reminder: fill in 'What', 'Why' and depends_on, and link "
+              "[[{}]] in the epoch file.".format(args.task_id))
+    print("The task only leaves 001 once the human checks "
+          "`- [x] Ready to plan` (Release section of the card).")
     return 0
 
 

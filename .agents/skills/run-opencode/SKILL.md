@@ -1,95 +1,93 @@
 ---
 name: run-opencode
-description: Invoca o opencode como executor headless de tarefas de código (opencode run, yolo mode, agents custom, multi-provider, saída NDJSON). Use quando for delegar trabalho de código ao opencode via CLI - contrato geral e escolha de ferramenta na skill delegate-coding.
+description: Invokes opencode as a headless executor of coding tasks (opencode run, yolo mode, custom agents, multi-provider, NDJSON output). Use when delegating coding work to opencode via CLI - general contract and tool choice in the delegate-coding skill.
 ---
 
 # run-opencode
 
-Contrato, regras de yolo/auth e checklist: skill `delegate-coding` — leia antes da primeira delegação. Antes da primeira invocação na máquina, confirme as flags com `opencode run --help` — versões divergem (fonte é de meados de 2026; flags abaixo conferidas contra a instalação local em 2026-07-12, divergências anotadas em cada seção).
+Contract, yolo/auth rules and checklist: skill `delegate-coding` — read it before the first delegation. Before the first invocation on the machine, confirm the flags with `opencode run --help` — versions diverge (the source is from mid-2026; flags below checked against the local installation on 2026-07-12, divergences noted in each section).
 
-## Invocação headless
-
-```bash
-timeout 600 opencode run --auto --format json "task escopada"
-```
-
-- `opencode run [mensagem..]` processa, imprime e sai (sem argumentos abre a TUI — nunca chame `opencode` puro em automação).
-- **stdin não é garantido** ("if supported" na fonte) — passe a mensagem como argumento.
-- Invocações repetidas: suba `opencode serve` uma vez e use `--attach http://localhost:<porta>` para evitar cold start.
-
-## Saída e parsing
-
-- `--format default|json`. O json é **NDJSON** (um evento por linha): `step_start`, `text`, `tool_use`, `tool_result`, `step_finish` (traz tokens e custo), com `sessionID` nos eventos.
+## Headless invocation
 
 ```bash
-opencode run --format json "..." | jq -r 'select(.type=="text") | .part.text'      # texto final
-opencode run --format json "..." | jq 'select(.type=="step_finish") | .part'       # tokens/custo
+timeout 600 opencode run --auto --format json "scoped task"
 ```
 
-## Sessões
+- `opencode run [message..]` processes, prints and exits (without arguments it opens the TUI — never call bare `opencode` in automation).
+- **stdin is not guaranteed** ("if supported" in the source) — pass the message as an argument.
+- Repeated invocations: start `opencode serve` once and use `--attach http://localhost:<port>` to avoid cold start.
 
-- Continuar a anterior: `-c/--continue`; retomar específica: `-s/--session ses_...`; ramificar preservando a original: `--fork`; nomear: `--title "..."`.
-- Gerência: `opencode session list --format json -n 10`, `opencode export <ID>`, `opencode import <arquivo|URL>`.
-- Capture o `sessionID` dos eventos NDJSON para follow-up.
+## Output and parsing
+
+- `--format default|json`. The json is **NDJSON** (one event per line): `step_start`, `text`, `tool_use`, `tool_result`, `step_finish` (carries tokens and cost), with `sessionID` in the events.
+
+```bash
+opencode run --format json "..." | jq -r 'select(.type=="text") | .part.text'      # final text
+opencode run --format json "..." | jq 'select(.type=="step_finish") | .part'       # tokens/cost
+```
+
+## Sessions
+
+- Continue the previous one: `-c/--continue`; resume a specific one: `-s/--session ses_...`; branch preserving the original: `--fork`; name: `--title "..."`.
+- Management: `opencode session list --format json -n 10`, `opencode export <ID>`, `opencode import <file|URL>`.
+- Capture the `sessionID` from the NDJSON events for follow-up.
 
 ## Yolo mode
 
-Yolo é o modo padrão desta família de skills (decisão de 2026-07-12); o controle vem do orquestrador (worktree isolada, prompt escopado, timeout). **A flag varia por versão:** na instalação local a flag é `--auto` ("auto-approve permissions that are not explicitly denied"); a fonte documenta `--dangerously-skip-permissions` — use o que `opencode run --help` mostrar. Particularidade nas duas: **`deny` explícito em `opencode.json` ainda vence** — se algo for bloqueado inexplicavelmente, procure um `deny` na config do repo. O permissionamento fino (`permission` allow/ask/deny, `OPENCODE_PERMISSION`) está mapeado na síntese, mas **não é usado** aqui.
+Yolo is this skill family's default mode (decision of 2026-07-12); control comes from the orchestrator (isolated worktree, scoped prompt, timeout). **The flag varies by version:** on the local installation the flag is `--auto` ("auto-approve permissions that are not explicitly denied"); the source documents `--dangerously-skip-permissions` — use whatever `opencode run --help` shows. A quirk in both: **an explicit `deny` in `opencode.json` still wins** — if something is blocked inexplicably, look for a `deny` in the repo's config. Fine-grained permissioning (`permission` allow/ask/deny, `OPENCODE_PERMISSION`) exists, but is **not used** here.
 
-## Agentes específicos
+## Specific agents
 
-- Primários built-in: `build` (dev completo, default) e `plan` (read-only). Subagents: `general`, `explore`, `scout`.
-- Seleção: `--agent <nome>`; subagents também por `@mention` no prompt.
-- Custom: `opencode agent create` (ou não-interativo com `--path --description --mode --tools --model`), ou markdown com frontmatter (`description`, `mode: primary|subagent|all`, `tools:`) em `.opencode/`.
+- Built-in primaries: `build` (full dev, default) and `plan` (read-only). Subagents: `general`, `explore`, `scout`.
+- Selection: `--agent <name>`; subagents also via `@mention` in the prompt.
+- Custom: `opencode agent create` (or non-interactive with `--path --description --mode --tools --model`), or markdown with frontmatter (`description`, `mode: primary|subagent|all`, `tools:`) in `.opencode/`.
 
-## Modelo
+## Model
 
-- `--model/-m provider/model` — multi-provider é o ponto forte: `anthropic/claude-sonnet-4-6`, `openai/gpt-5`, `google/gemini-3-pro`...
-- `--variant` controla esforço de raciocínio (Anthropic: `high`/`max`; OpenAI: `none`…`xhigh`; Google: `low`/`high`).
-- `opencode models [provider]` lista; config persistente em `opencode.json` (`model`, `small_model`).
-- **Qual modelo:** o perfil explícito da invocação; `size`, `critical` e retornos não mudam modelo ou effort.
+- `--model/-m provider/model` — multi-provider is the strong point: `anthropic/claude-sonnet-4-6`, `openai/gpt-5`, `google/gemini-3-pro`...
+- `--variant` controls reasoning effort (Anthropic: `high`/`max`; OpenAI: `none`…`xhigh`; Google: `low`/`high`).
+- `opencode models [provider]` lists; persistent config in `opencode.json` (`model`, `small_model`).
 
 ## MCP
 
-A fonte só documenta **permissões** de MCP (padrões `"mymcp_*"` no bloco `permission`), não o registro de servers — confira a doc oficial se precisar de MCP.
+The source only documents MCP **permissions** (`"mymcp_*"` patterns in the `permission` block), not server registration — check the official docs if you need MCP.
 
-## Contexto e diretórios
+## Context and directories
 
-- `--dir <path>` define o working directory da execução.
-- `--file/-f <path>` (repetível) anexa arquivos ao prompt.
-- Config inline sem tocar em arquivos: `OPENCODE_CONFIG_CONTENT='{"model":"..."}'` (prioridade: env → `opencode.json` local → global) — útil para o orquestrador injetar config por invocação.
+- `--dir <path>` sets the run's working directory.
+- `--file/-f <path>` (repeatable) attaches files to the prompt.
+- Inline config without touching files: `OPENCODE_CONFIG_CONTENT='{"model":"..."}'` (priority: env → local `opencode.json` → global) — useful for the orchestrator to inject config per invocation.
 
 ## Auth
 
-Pré-condição: já logado (`opencode auth login` já feito pelo humano; credenciais em `~/.local/share/opencode/auth.json` ou `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` no ambiente). **Não configure login nesta skill.** Se a saída mencionar credencial/API key/provider auth/401: **aborte a task inteira do orquestrador** — sem retry, sem fallback; falha imediata **sem** sinal de auth é erro de invocação, não de login (regra 2 do `delegate-coding`).
+Precondition: already logged in (`opencode auth login` already done by the human; credentials in `~/.local/share/opencode/auth.json` or `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` in the environment). **Do not configure login in this skill.** If the output mentions credential/API key/provider auth/401: **abort the orchestrator's entire task** — no retry, no fallback; an immediate failure with **no** auth signal is an invocation error, not a login one (rule 2 of `delegate-coding`).
 
-## Pegadinhas
+## Gotchas
 
-- Tool `question` pode travar sem TTY — o prompt deve dar toda a informação e proibir perguntas.
-- `websearch` exige provider OpenCode ou `OPENCODE_ENABLE_EXA=true`; `lsp` exige `OPENCODE_EXPERIMENTAL_LSP_TOOL=true`.
-- `read` limita 2000 linhas por chamada (offset/limit para arquivos grandes).
-- Regras de bash na config: a **última** que casa vence — `deny` residual pode vir daí.
+- The `question` tool can hang without a TTY — the prompt must give all the information and forbid questions.
+- `websearch` requires the OpenCode provider or `OPENCODE_ENABLE_EXA=true`; `lsp` requires `OPENCODE_EXPERIMENTAL_LSP_TOOL=true`.
+- `read` caps at 2000 lines per call (offset/limit for large files).
+- Bash rules in the config: the **last** match wins — a residual `deny` may come from there.
 
-## Receitas
+## Recipes
 
 ```bash
-# Task de edição com modelo explícito
+# Editing task with an explicit model
 timeout 600 opencode run --auto --format json \
   --model anthropic/claude-sonnet-4-6 "Write tests for src/utils.ts; run them"
 
-# Em diretório isolado, modelo barato, custo capturado
+# In an isolated directory, cheap model, cost captured
 timeout 600 opencode run --auto --dir /path/worktree \
   --model anthropic/claude-haiku-4-5 --format json "Execute npm test and report results" \
   | jq 'select(.type=="step_finish") | .part'
 
-# Reconhecimento com o agent plan (read-only por natureza)
+# Recon with the plan agent (read-only by nature)
 timeout 300 opencode run --agent plan --format json "Audit the codebase for security issues"
 
-# Follow-up em fork da sessão
+# Follow-up in a fork of the session
 opencode run --session ses_abc123 --fork --auto --format json "Try an alternative approach"
 ```
 
-## Ver também
+## See also
 
-- Contrato e escolha: `delegate-coding` · Mesma operação em outra ferramenta: `run-cursor-agent`, `run-codex`.
-- Rastrear um fato até o bruto: [[researches/opencode-headless/opencode-headless|síntese]].
+- Contract and choice: `delegate-coding` · Same operation in another tool: `run-cursor-agent`, `run-codex`.

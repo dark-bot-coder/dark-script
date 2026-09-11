@@ -1,4 +1,4 @@
 interface:
-  display_name: "Otimizar memories"
-  short_description: "Compacta memories sem perder prova cronológica"
-  default_prompt: "Use $optimize-memory para compactar memories preservando identidade, cronologia e decisões críticas."
+  display_name: "Optimize memories"
+  short_description: "Compact memories without losing chronological proof"
+  default_prompt: "Use $optimize-memory to compact memories while preserving identity, chronology, and critical decisions."

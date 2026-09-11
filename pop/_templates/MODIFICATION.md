@@ -1,15 +1,15 @@
-# M-<n> — <nome da modification>
+# M-<n> — <modification name>
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher**. Este arquivo existe **somente para modifications multi-task**; modification de task única vive na linha do MODIFICATIONS.md + card.
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in**. This file exists **only for multi-task modifications**; a single-task modification lives in the MODIFICATIONS.md line + card.
 
-- **Projeto:** [[pop/PROJECT|<Nome do projeto>]] · **Modifications:** [[pop/MODIFICATIONS|Modifications]]
-- **Status:** aberta | em andamento | concluída
-- **Descrição:** uma linha — o que muda e por quê.
-- **Yolo:** sim | não — bullet **opcional** (ausente = não); só o humano marca.
+- **Project:** [[pop/PROJECT|<Project name>]] · **Modifications:** [[pop/MODIFICATIONS|Modifications]]
+- **Status:** open | in progress | completed
+- **Description:** one line — what changes and why.
+- **Yolo:** yes | no — **optional** bullet (absent = no); only the human marks it.
 
-> Somente tasks ainda abertas — **sempre descrições de uma linha**. Detalhe vai para a spec ou para a pasta da task no kanban. Task iniciada ganha link `[[M-<n>.<t>-<slug>]]`; ao concluir o `005_closing`, sai da tabela depois de sua memory válida (ver [[WORKFLOW|WORKFLOW]]). Opt-in/out de yolo por task: anexe ` · yolo: sim` (ou ` · yolo: não`) ao fim da célula Descrição — sem coluna nova.
+> Only still-open tasks — **always one-line descriptions**. Detail goes to the spec or to the task's kanban folder. A started task gets the `[[M-<n>.<t>-<slug>]]` link; on closing the `005_closing` stage, it leaves the table after its valid memory (see [[WORKFLOW|WORKFLOW]]). Per-task yolo opt-in/out: append ` · yolo: yes` (or ` · yolo: no`) to the end of the Description cell — no new column.
 
-| Task | Descrição (≤1 linha) | Status |
-|------|----------------------|--------|
-| `M-<n>.1-<slug>` | O que entrega. · size: S | não iniciada |
-| [[M-<n>.2-<slug>]] | O que entrega (linkada: já existe no kanban). | 002_planning |
+| Task | Description (≤1 line) | Status |
+|------|-----------------------|--------|
+| `M-<n>.1-<slug>` | What it delivers. · size: S | not started |
+| [[M-<n>.2-<slug>]] | What it delivers (linked: already exists in the kanban). | 002_planning |

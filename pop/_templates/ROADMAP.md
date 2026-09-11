@@ -1,18 +1,18 @@
-# Roadmap — <Nome do projeto>
+# Roadmap — <Project name>
 
-Ficha: [[pop/PROJECT|<Nome do projeto>]]
+Profile: [[pop/PROJECT|<Project name>]]
 
-> O que chega **fora do planejamento** (hotfix, ajuste, feature emergente pequena) não entra aqui — vai para o [[pop/MODIFICATIONS|MODIFICATIONS]] ([[_templates/MODIFICATIONS|template]], criado sob demanda). Fronteira no [[AGENTS|AGENTS]].
+> Whatever arrives **outside the plan** (hotfix, tweak, small emergent feature) doesn't go here — it goes to [[pop/MODIFICATIONS|MODIFICATIONS]] ([[_templates/MODIFICATIONS|template]], created on demand). Frontier in [[AGENTS|AGENTS]].
 
-> Só as **epochs**, uma linha cada. Phases e tasks ficam no arquivo de cada epoch em `pop/roadmap/` ([[_templates/EPOCH|template]]; escopo com o harness na própria raiz: sem o prefixo `pop/`). Nunca detalhe aqui.
+> Only the **epochs**, one line each. Phases and tasks live in each epoch's file in `pop/roadmap/` ([[_templates/EPOCH|template]]; a scope whose harness lives at its own root: without the `pop/` prefix). Never add detail here.
 
-| # | Epoch | Descrição (≤1 linha) | Status |
-|---|-------|----------------------|--------|
-| 1 | [[pop/roadmap/1-<slug>\|<nome da epoch>]] | O que este capítulo entrega. | pendente |
-| 2 | [[pop/roadmap/2-<slug>\|<nome da epoch>]] | ... | pendente |
+| # | Epoch | Description (≤1 line) | Status |
+|---|-------|-----------------------|--------|
+| 1 | [[pop/roadmap/1-<slug>\|<epoch name>]] | What this chapter delivers. | pending |
+| 2 | [[pop/roadmap/2-<slug>\|<epoch name>]] | ... | pending |
 
-**Status de epoch/phase:** pendente | em andamento | concluída
+**Epoch/phase status:** pending | in progress | completed
 
-## Ideias futuras (sem epoch)
+## Future ideas (no epoch)
 
-- Coisas que podem virar epoch um dia, uma linha cada.
+- Things that may become an epoch one day, one line each.

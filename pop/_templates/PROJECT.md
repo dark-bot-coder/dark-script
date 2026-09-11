@@ -1,37 +1,37 @@
-# <Nome do projeto>
+# <Project name>
 
-- **Status:** ideia | planejando | em andamento | pausado | concluído | abandonado
-- **Prioridade:** alta | média | baixa
-- **Criado em:** AAAA-MM-DD
+- **Status:** idea | planning | in progress | paused | completed | abandoned
+- **Priority:** high | medium | low
+- **Created on:** YYYY-MM-DD
 - **Roadmap:** [[pop/ROADMAP|Roadmap]]
 
-## Objetivo
+## Goal
 
-Uma ou duas frases: o que é sucesso para este projeto?
+One or two sentences: what does success look like for this project?
 
-## Contexto
+## Context
 
-O que um agente precisa saber antes de trabalhar nisso: histórico, motivação, estado atual do mundo.
+What an agent needs to know before working on this: history, motivation, current state of the world.
 
-## Estrutura de pastas
+## Folder structure
 
-Anatomia padrão (ver AGENTS.md da raiz): `AGENTS.md` do projeto + `.agents/skills/` na raiz; **todo o harness em `pop/`** — `pop/PROJECT.md` + `pop/ROADMAP.md` + `pop/roadmap/` (epochs), `pop/researches/` (pesquisas por assunto), `pop/skills/`, `pop/specs/`, `pop/notes/` (learnings/decisions/ideas/references), `pop/memory/` (resumos de tasks concluídas), `pop/worktrees/` (gitignorada), `pop/kanban/` (estágios 001–005_closing do [[WORKFLOW|WORKFLOW]]); o **conteúdo do projeto** (código, manuscrito, clones — conforme o type, [[TYPES|TYPES]]) vive direto na raiz. Liste aqui apenas o que fugir do padrão.
+Standard anatomy (see the root AGENTS.md): the project's `AGENTS.md` + `.agents/skills/` at the root; **all the harness in `pop/`** — `pop/PROJECT.md` + `pop/ROADMAP.md` + `pop/roadmap/` (epochs), `pop/researches/` (research by topic), `pop/skills/`, `pop/specs/`, `pop/notes/` (learnings/decisions/ideas/references), `pop/memory/` (summaries of completed tasks), `pop/worktrees/` (gitignored), `pop/kanban/` (stages 001–`005_closing` of the [[WORKFLOW|WORKFLOW]]); the **project content** (code, manuscript, clones — per the type, [[TYPES|TYPES]]) lives directly at the root. List here only what deviates from the standard.
 
-## Harness do agente
+## Agent harness
 
-Regras específicas para agentes trabalhando neste projeto:
+Project-specific rules for agents working on this project:
 
-- **Type e repositórios:** declarados no [[AGENTS|AGENTS do projeto]] — onde mora o conteúdo, quais repos existem e qual é a branch de PR.
-- **Worktree por task:** sim (padrão) | não (aceitável só em projeto sem repositório git — tasks perdem o isolamento e o PR).
-- **Ferramentas e restrições:** o que pode e o que não pode.
-- **Tom/estilo:** se aplicável.
-- **Tasks críticas por padrão?** sim | não — e o que torna uma task crítica neste projeto (gate humano extra em 005, ver [[WORKFLOW|WORKFLOW]]).
-- **Skills:** liste as skills em `pop/skills/` com uma linha sobre quando usar cada uma.
+- **Type and repositories:** declared in the [[AGENTS|project AGENTS]] — where the content lives, which repos exist and what the PR branch is (`uni-repo` | `multi-repo`, see [[TYPES|TYPES]]).
+- **Worktree per task:** yes (default) | no (acceptable only in a project without a git repository — tasks lose isolation and the PR).
+- **Tools and restrictions:** what is allowed and what is not.
+- **Tone/style:** if applicable.
+- **Tasks critical by default?** yes | no — and what makes a task critical in this project (extra human gate in 005, see [[WORKFLOW|WORKFLOW]]).
+- **Skills:** list the skills in `pop/skills/` with one line on when to use each.
 
-## Projetos relacionados
+## Related projects
 
-- [[pop/PROJECT|<nome>]] — por que se relacionam.
+- [[pop/PROJECT|<name>]] — why they relate.
 
-## Decisões
+## Decisions
 
-- **AAAA-MM-DD:** decisão tomada e justificativa. (Se crescer, extrair para nota própria em `pop/notes/`.)
+- **YYYY-MM-DD:** decision made and rationale. (If it grows, extract into its own note in `pop/notes/`.)

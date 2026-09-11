@@ -1,79 +1,77 @@
-# <Nome do projeto> — instruções para agentes
+# <Project name> — instructions for agents
 
-> Blockquotes deste template são instruções de preenchimento — **apague-os ao preencher** (exceto este abaixo, que permanece no projeto).
+> Blockquotes in this template are fill-in instructions — **delete them when filling it in** (except the one below, which stays in the project).
 
-> Projeto gerido pelo workflow do **ProjectOfProjects (PoP)**. `CLAUDE.md` é um symlink deste arquivo — edite sempre este.
+> Project managed by the **ProjectOfProjects (PoP)** workflow. `CLAUDE.md` is a symlink to this file — always edit this one.
 
-- **Escopo:** este diretório é o escopo inteiro do fluxo — o harness viaja com ele e **nada acima desta raiz faz parte dele**, mesmo que a ferramenta carregue sozinha um `AGENTS.md` de diretório ancestral (seção "Escopo corrente" do [[WORKFLOW|WORKFLOW]]).
-- **Idioma do projeto:** <pt-BR> — specs, notes, pesquisas, comentários de código e todo o fluxo do kanban seguem este idioma.
-- **Idiomas suportados (i18n):** <lista de idiomas que a aplicação deve suportar — tratados no roadmap e nas specs. Só para aplicações; remova se não se aplica.>
-- **Type:** <uni-repo | multi-repo> — `uni-repo`: esta pasta **é** o próprio repositório — ou raiz livre sem repo, versionada no repositório que a hospeda — com o `pop/` inteiro aqui dentro | `multi-repo`: esta pasta é a **mãe sem harness** — só este AGENTS.md, INDEX.md e o ROADMAP.md geral; cada repo clonado na raiz carrega o próprio `pop/` completo e declara `type: uni-repo`.
+- **Scope:** this directory is the entire scope of the flow — the harness travels with it and **nothing above this root belongs to it**, even when a tool loads an ancestor `AGENTS.md` on its own ("Current scope" section of [[WORKFLOW|WORKFLOW]]).
+- **Project language:** <en> — specs, notes, researches, code comments and the entire kanban flow follow this language.
+- **Supported languages (i18n):** <list of languages the application must support — handled in the roadmap and specs. Applications only; remove if not applicable.>
+- **Type:** <uni-repo | multi-repo> — `uni-repo`: this folder **is** the repository itself — or a free root with no repo, versioned in the repository that hosts it — with the entire `pop/` inside it | `multi-repo`: this folder is the **harness-less mother** — only this AGENTS.md, INDEX.md and the general ROADMAP.md; each repo cloned at the root carries its own complete `pop/` and declares `type: uni-repo`.
 
-> **Mãe de `multi-repo`:** sem `pop/` — remova as seções que dependem do harness (Workflow, Skills, DOX); o arquivo fica com type, repositórios e os links de INDEX/ROADMAP geral.
+> **`multi-repo` mother:** no `pop/` — remove the sections that depend on the harness (Workflow, Skills, DOX); the file keeps type, repositories and the links to the general INDEX/ROADMAP.
 
-- **Ficha:** [[pop/PROJECT|PROJECT]] · **Roadmap:** [[pop/ROADMAP|ROADMAP]] · **Modifications:** [[pop/MODIFICATIONS|MODIFICATIONS]] (criado sob demanda)
+- **Profile:** [[pop/PROJECT|PROJECT]] · **Roadmap:** [[pop/ROADMAP|ROADMAP]] · **Modifications:** [[pop/MODIFICATIONS|MODIFICATIONS]] (created on demand)
 
-## O que NÃO entra neste arquivo
+## What does NOT go in this file
 
-> Instrução de preenchimento — **mantenha esta seção no projeto**: ela é o que impede o arquivo de inchar.
+> Fill-in instruction — **keep this section in the project**: it is what stops the file from swelling.
 
-Fonte única: o que está no harness não se copia para cá, porque duplicata é drift garantido — muda o fluxo, e a cópia fica mentindo. **Nunca** escreva aqui:
+Single source: what lives in the harness is never copied here, because duplication is guaranteed drift — the flow changes and the copy starts lying. **Never** write here:
 
-- narração dos estágios do kanban (nomes, ordem, o que cada um faz) — só [[WORKFLOW|WORKFLOW]];
-- protocolo de contexto e qualquer heurística de leitura/busca — [[WORKFLOW|WORKFLOW]] e as skills;
-- regras gerais do fluxo (kanban opcional com tracking sempre, memory/roadmap enxuto, soberania do comando humano) — "Regras transversais" do [[WORKFLOW|WORKFLOW]], que o instalador entrega junto do harness;
-- qualquer trecho copiável do [[WORKFLOW|WORKFLOW]] — linke com gatilho em vez de reproduzir.
+- narration of the kanban stages (names, order, what each one does) — only [[WORKFLOW|WORKFLOW]];
+- the context protocol and any reading/search heuristic — [[WORKFLOW|WORKFLOW]] and the skills;
+- general flow rules (optional kanban with tracking always, memory/lean roadmap, sovereignty of the human command) — the "Transversal rules" section of [[WORKFLOW|WORKFLOW]], which the installer delivers alongside the harness;
+- any copyable excerpt of [[WORKFLOW|WORKFLOW]] — link it with a trigger instead of reproducing it.
 
-Aqui entra só o que é **deste projeto**: idioma, repos e branch de PR, skills e comandos de verificação, DOX. **Teto: ~60 linhas** — a única exceção é a seção DOX das aplicações.
+Only what belongs to **this project** goes here: language, repos and PR branch, skills and verification commands, DOX. **Cap: ~60 lines** — the only exception is the DOX section of applications.
 
-## Repositórios
+## Repositories
 
-| Repo | URL | Clone em | Branch de PR |
-|------|-----|----------|--------------|
-| <nome> | <url> | `<nome>/` na raiz do projeto \| a própria raiz do projeto **é** o repo | <main> |
+| Repo | URL | Clone at | PR branch |
+|------|-----|----------|-----------|
+| <name> | <url> | `<name>/` at the project root \| the project root itself **is** the repo | <main> |
 
-_Sem repositório externo: o trabalho vive no repositório que hospeda este harness e os PRs de task apontam para a branch principal dele._
+_No external repository: the work lives in the repository that hosts this harness and task PRs target its main branch._
 
 ## Workflow
 
-Alterações de conteúdo entram por triagem: fix direto, **rota sem kanban** (plan mode do coding agent, memory `D-` obrigatória) ou kanban em `pop/kanban/` — recomendado para alterações grandes e default para yolo e itens do roadmap (`<n>.<m>.<t>-<slug>`) ou das modifications (`M-<n>.<t>-<slug>`).
+Content changes enter through triage: direct fix, the **no-kanban route** (the coding agent's plan mode, mandatory `D-` memory) or the kanban in `pop/kanban/` — recommended for large changes and the default for yolo and for roadmap (`<n>.<m>.<t>-<slug>`) or modifications (`M-<n>.<t>-<slug>`) items.
 
-- **Principal delegation-first:** não existe custom agent `pop-orchestrator`; o agente principal **sempre delega** planejamento, recon, execução, julgamento e verificação aos seis especialistas, salvo trabalho pontual e simples abaixo do piso.
-- Cada especialista adquire o contexto diretamente nos paths autorizados; o principal envia só o envelope de autorização e conserva roteamento, gates, transições e integração.
-- Pedido de alteração sem card aciona `new-task` → `advance-task`; “iniciar o fluxo em yolo” materializa/libera a task e percorre a rota yolo inteira, nunca execução direta.
-- **Entrega:** o PR da task aponta para a **branch de PR declarada** na tabela de repositórios acima; o merge é sempre do humano.
-- **Estágios, gates, rota yolo e protocolo de contexto:** [[WORKFLOW|WORKFLOW]] é a fonte única — leia antes de criar, avançar, verificar ou fechar qualquer task deste projeto, e não replique nada dele aqui.
+- A change request with no card triggers `new-task` → `advance-task`; “start the flow in yolo” materializes/releases the task and follows the entire yolo route, never direct execution.
+- **Delivery:** the task PR targets the **PR branch declared** in the repositories table above; the merge is always the human's.
+- **Stages, gates, yolo route and context protocol:** [[WORKFLOW|WORKFLOW]] is the single source — read it before creating, advancing, verifying or closing any task of this project, and do not replicate any of it here.
 
 ## Skills
 
-- **Workflow do PoP:** `.agents/skills/` — `new-task`, `advance-task`, `plan-roadmap`, `write-spec`, `sync-specs`.
-- **Do domínio do projeto:** `pop/skills/` — listadas na ficha [[pop/PROJECT|PROJECT]].
+- **PoP workflow:** `.agents/skills/` — `new-task`, `advance-task`, `judge-dredd`, `plan-roadmap`, `write-spec`, `sync-specs`, `optimize-memory`.
+- **Project domain:** `pop/skills/` — listed in the profile [[pop/PROJECT|PROJECT]].
 
-### Clean code (só projetos de código)
+### Clean code (code projects only)
 
-> **Remova esta seção se o projeto não é de código.**
+> **Remove this section if the project is not a code project.**
 
-- `clean-code-change` (`.agents/skills/`) — siga ao **planejar (002) e executar (004)** qualquer task que crie ou altere código.
-- `clean-code-review` (`.agents/skills/`) — siga ao **verificar (005)** task de código e como critério de leitura em gate de plano ou PR.
-- **Obrigatório:** em 002, toda task que cria/altera código entra com `clean-code-change` na linha **004** e `clean-code-review` na linha **005** da tabela **Skills por etapa** do card.
+- `clean-code-change` (`.agents/skills/`) — follow when **planning (002) and executing (004)** any task that creates or changes code.
+- `clean-code-review` (`.agents/skills/`) — follow when **verifying (005)** a code task and as a reading criterion in plan or PR gates.
+- **Mandatory:** in 002, every task that creates/changes code enters `clean-code-change` on the **004** row and `clean-code-review` on the **005** row of the card's **Skills per stage** table.
 
-#### Verificação do projeto
+#### Project verification
 
-> Comandos exatos que as skills de clean code rodam — mantenha fiéis ao ferramental real do projeto.
+> Exact commands the clean code skills run — keep faithful to the project's real tooling.
 
-| Verificação | Comando |
-|-------------|---------|
-| Formatter | `<comando>` |
-| Linter | `<comando>` |
-| Testes | `<comando>` |
+| Check | Command |
+|-------|---------|
+| Formatter | `<command>` |
+| Linter | `<command>` |
+| Tests | `<command>` |
 
-## Processo DOX (só aplicações)
+## DOX process (applications only)
 
-> Projetos de **aplicação** colam aqui a seção completa de [[_templates/DOX|_templates/DOX.md]] — árvore de AGENTS.md no código como contratos hierárquicos. Este AGENTS.md pode exceder o teto de ~60 linhas para comportá-la — e só por causa dela. **Remova esta seção nos demais tipos de projeto.**
+> **Application** projects paste here the full section from [[_templates/DOX|_templates/DOX.md]] — a tree of AGENTS.md files in the code as hierarchical contracts. This AGENTS.md may exceed the ~60-line cap to hold it — and only because of it. **Remove this section in all other project types.**
 
-## Regras essenciais
+## Essential rules
 
-- Conteúdo no idioma declarado acima; wikilinks para referências internas; arquivos ≤~150 linhas; datas AAAA-MM-DD.
-- **Nunca** marcar `- [ ] Feito` nem executar itens `(user)` — são exclusivos do humano.
-- **Nunca** fazer merge de PR de task — o merge é do humano (ou comandado por ele na rodada de merge).
-- **Regras gerais do fluxo** — kanban opcional com tracking sempre, memory + roadmap enxuto no fechamento, soberania do comando humano sem waiver implícito: seção "Regras transversais" do [[WORKFLOW|WORKFLOW]], que acompanha o harness instalado. *Leia antes de agir fora de uma task ou de interpretar um pedido como dispensa do fluxo.*
+- Content in the language declared above; wikilinks for internal references; files ≤~150 lines; dates YYYY-MM-DD.
+- **Never** check `- [ ] Done` or execute `(user)` items — those belong exclusively to the human.
+- **Never** merge a task PR — merging is the human's job (or commanded by them in the merge round).
+- **General flow rules** — optional kanban with tracking always, memory + lean roadmap at close-out, sovereignty of the human command with no implicit waiver: the "Transversal rules" section of the [[WORKFLOW|WORKFLOW]] installed alongside this harness. *Never an AGENTS.md inherited from an ancestor directory.* *Read it before acting outside a task or before reading a request as a waiver of the flow.*

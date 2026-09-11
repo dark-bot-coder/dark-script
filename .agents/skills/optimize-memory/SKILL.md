@@ -1,80 +1,60 @@
 ---
 name: optimize-memory
-description: Converte memory legada para o layout granular (pasta de data + ledger + entradas com evidência) e enxuga arquivo que passe do teto, sem perder identidade, prova, cronologia ou decisões críticas. Roda fora do kanban e em ondas de subagentes paralelos. Use quando o humano pedir otimização/compactação de memory, quando um ledger passar de 1200 ou uma entrada de 800 caracteres, quando existir memory fora de pasta de data, ou na frente de saúde de memories da weekly-review.
+description: Converts legacy memory into the granular layout (date folder + ledger + entries with evidence) and trims any file over the cap, without losing identity, evidence, chronology, or critical decisions. Runs outside the kanban and in waves of parallel subagents. Use on explicit request, when a ledger exceeds 1200 or an entry 800 characters, when memory sits outside a date folder, or on weekly-review candidates.
 ---
 
 # optimize-memory
 
-Deixar `memory/` granular e verificável sem virar changelog nem apagar a prova da task. A unidade é sempre **um ledger por task**; nunca fundir, excluir ou renomear uma task.
+Make `memory/` granular and verifiable without turning it into a changelog or erasing proof. The unit remains **one ledger per task**: never merge, delete, or rename memories.
 
-**Roda fora do kanban, sempre.** `memory/` é harness próprio do escopo, não conteúdo: não crie card, não use `new-task`, não abra branch, worktree ou PR de task e não mova task alguma ("Escopo corrente" › três classes, no [[WORKFLOW|WORKFLOW]]). Acionada pela [[.agents/skills/weekly-review/SKILL|weekly-review]], você é um worker da onda de correção dela, com o escopo já recortado.
+**It always runs outside the kanban.** `memory/` is the scope's own harness, not content: do not create a card, do not use `new-task`, do not open a task branch, worktree or PR, and do not move any task ("Current scope" › three classes, in [[WORKFLOW|WORKFLOW]]). Invoked by [[.agents/skills/weekly-review/SKILL|weekly-review]], you are a worker of its correction wave, with the scope already carved out.
 
-**Delegue em ondas paralelas.** O principal faz o preflight, distribui e valida; ele não converte arquivo a arquivo à mão. Um worker por **task** (o ledger e as entradas que nascem dele são um write set só), em ondas de 3-5, com write sets **disjuntos** — dois workers nunca recebem a mesma pasta de data. Cada worker devolve os caminhos que escreveu e as contagens de caracteres; nenhum worker dispara subagentes nem decide reclassificar o que recebeu. Um único arquivo pequeno se faz direto: onda para uma task é cerimônia sem ganho.
+**Delegate in parallel waves.** The main agent does the preflight, distributes and validates; it does not convert file by file by hand. One worker per **task** (the ledger and the entries born from it are a single write set), in waves of 3-5, with **disjoint** write sets — two workers never receive the same date folder. Each worker returns the paths it wrote and the character counts; no worker spawns subagents or decides to reclassify what it received. A single small file is done directly: a wave for one task is ceremony with no gain.
 
-## O layout alvo
+## Target layout
 
 ```
-memory/AAAA-MM-DD/<id>.md              ← ledger: prova + índice, ≤1200 caracteres
-memory/AAAA-MM-DD/<id>.<nn>-<slug>.md  ← entrada: uma coisa feita, ≤800 caracteres
+memory/YYYY-MM-DD/<id>.md              ← ledger: proof + index, ≤1200 characters
+memory/YYYY-MM-DD/<id>.<nn>-<slug>.md  ← entry: one thing done, ≤800 characters
 ```
 
-A pasta é a data de conclusão e **tem de ser igual a `finished`** do ledger. O ledger carrega o frontmatter íntegro, entrega, verificação, impacto em contratos, `## Entradas` (uma linha por entrada, em ordem cronológica) e `## Links`. Cada entrada tem `task` + `entry` no frontmatter, o que foi feito em duas a quatro frases e **ao menos um wikilink de evidência** — a spec alterada ou o arquivo tocado. Forma exata: [[_templates/MEMORY|MEMORY]] e [[_templates/MEMORY-ENTRY|MEMORY-ENTRY]].
+The folder is the completion date and **must equal the ledger's `finished`**. The ledger keeps the intact frontmatter, delivery, verification, contract impact, `## Entries` (one line per entry, chronological) and `## Links`. Each entry carries `task` + `entry` frontmatter, what was done in two to four sentences, and **at least one evidence wikilink** — the spec changed or the file touched. Form: [[_templates/MEMORY|MEMORY]] and [[_templates/MEMORY-ENTRY|MEMORY-ENTRY]].
 
-## Entrada e preflight
+## Preflight and irreducible data
 
-1. Receber o escopo exato: projeto, conjunto de arquivos ou achados da `weekly-review`.
-2. Classificar cada arquivo em um dos dois modos: **converter** (memory plana em `memory/<id>.md`, ou ledger que concentra o que deveriam ser entradas) e **enxugar** (ledger ou entrada acima do teto, já no layout).
-3. Ler a spec vigente, decisões e memories somente quando linkadas pelo arquivo ou necessárias para distinguir decisão crítica de narrativa secundária.
-4. Antes de editar, registrar para cada arquivo: caminho, `task`, `project`, `started`, `finished`, `commit`, `pr`, sequência dos fatos e decisões duráveis.
-5. Campo obrigatório ausente ou cronologia ambígua → **BLOCKED**; não inferir nem converter o arquivo.
+Classify each file into one mode: **convert** (flat memory in `memory/<id>.md`, or a ledger holding what should be entries) or **trim** (ledger or entry over the cap, already in the layout).
 
-## O que preservar literalmente ou sem perda semântica
+For every file, inventory path, `task`, `project`, `started`, `finished`, `commit`, `pr`, event order, and durable decisions. Missing required fields or ambiguous chronology is **BLOCKED**—do not infer and do not convert.
 
-- Um ledger por task, com o mesmo id, e todo o frontmatter.
-- ID/slug da task, projeto, datas inicial/final, commit e PR (inclusive valor vazio explícito).
-- Ordem dos acontecimentos relevantes: início, entrega, verificação, integração/PR e término.
-- Resultado entregue, verificação final, desvios que alteraram o contrato e decisões críticas com sua justificativa.
-- Links com gatilho para specs, decisions, learnings, PR e commit ainda válidos.
+Preserve all frontmatter; task identity; dates; commit and PR (including an explicit empty value); the order of start, delivery, verification, integration/PR, and finish; delivered result; final verification; contract-changing deviations; critical decisions and rationale; and valid triggered links.
 
-Decisão crítica é a que limita comportamento futuro, registra escolha humana, segurança, compatibilidade, ownership, migração, irreversibilidade ou desvio aprovado. Na dúvida, preservar.
+A critical decision constrains future behavior or records a human choice, security, compatibility, ownership, migration, irreversibility, or approved deviation. When uncertain, preserve it.
 
-## Modo converter
+## Convert mode
 
-1. Mover o arquivo para `memory/<finished>/<id>.md`, usando o `finished` do próprio frontmatter — nunca a data de hoje, nunca inferida.
-2. Reduzir o ledger a entrega, verificação, impacto em contratos, `## Entradas` e `## Links`.
-3. Transformar em entradas o que saiu: áreas alteradas, telemetria, cada decisão durável, cada desvio. **Uma coisa feita por arquivo**, numerada `01`, `02`… na ordem cronológica dos acontecimentos.
-4. Dar a cada entrada a sua evidência. Entrada cuja mudança não tenha spec nem arquivo para apontar quase sempre pertence a outra entrada — funda antes de inventar link.
-5. Indexar toda entrada no `## Entradas` do ledger, com uma linha dizendo o que ela conta.
+1. Move the file to `memory/<finished>/<id>.md`, using the `finished` of its own frontmatter — never today's date, never inferred.
+2. Reduce the ledger to delivery, verification, contract impact, `## Entries` and `## Links`.
+3. Turn what came out into entries: changed areas, telemetry, every durable decision, every deviation. **One thing done per file**, numbered `01`, `02`… in the chronological order of the events.
+4. Give each entry its evidence. An entry whose change has no spec and no file to point at almost always belongs to another entry — merge before inventing a link.
+5. Index every entry under the ledger's `## Entries`, one line saying what it tells.
 
-## Modo enxugar
+## Trim mode — what may be compacted
 
-Compactar, dentro do arquivo que passou do teto:
+- Repeated plan text, edit steps, and trial-and-error narrative.
+- Long file lists that one subtree plus a sentence can replace.
+- Duplicate evidence when the final command/result preserves proof.
+- Context already held by a linked spec/decision, retaining one sentence and its trigger.
 
-- Repetições do plano, listas de passos de edição e narrativa de tentativa/erro.
-- Relações extensas de arquivos quando uma área/subtree e uma frase bastam.
-- Evidências duplicadas quando o comando final e o resultado preservam a prova.
-- Contexto já expresso por spec/decision linkada, mantendo uma frase e o gatilho.
+An entry that still does not fit in 800 characters is almost always **two entries** — splitting beats compressing. A ledger over 1200 is holding entry content: move it, do not squeeze it. Write short facts in chronological order. Do not add history, reinterpret decisions, or replace pointers with prose.
 
-Entrada que não couber em 800 caracteres depois disso quase sempre são **duas entradas** — dividir é a saída preferida sobre comprimir. Ledger que não couber em 1200 está guardando conteúdo de entrada: mova, não aperte. Preferir fatos curtos em ordem cronológica; não adicionar história nova, reinterpretar decisões ou substituir ponteiros por resumo.
+## Safe procedure
 
-## Procedimento seguro
+1. Produce a candidate keeping the frontmatter and the templates' structure.
+2. Compare it with the preflight inventory; any irreducible loss rejects it.
+   - **The comparison is deterministic, not a reading impression.** Extract from the original every commit hash (including those cited in the body, not only the frontmatter one) plus the literal `pr` and `authorization` values, and check that all of them appear in the candidate. A token present before and absent after is loss, even when the text looks equivalent — that is how one conversion lost 8 hashes on 2026-07-27.
+3. **Measure the candidate before writing it**, with `wc -c` — not afterwards, and not by eye. The caps are ≤1200 per ledger and ≤800 per entry; **1201 is a violation**, and writing only to discover that later leaves the scope worse than it was. Confirm as well `YYYY-MM-DD` dates and the folder equal to `finished`.
+4. Validate wikilinks — including each entry's evidence — and run `python3 pop/scripts/pop_validate.py`. The validation belongs to the **main agent**, after every wave: a worker that validates alone approves its own slice without seeing the collision.
+5. Review each diff; on failed preservation, restore the original and report **BLOCKED**.
+6. A backup, if you make one, lives **outside** `memory/` — inside it, a folder that is not a date is a layout violation, and you would have traded one debt for another. Delete it when closing; the durable proof is Git.
 
-1. Produzir a versão candidata mantendo o frontmatter e a estrutura dos templates.
-2. Comparar original e candidato com o inventário do preflight; qualquer perda irredutível reprova o candidato.
-   - **A comparação é determinística, não impressão de leitura.** Extraia do original o conjunto de hashes de commit (inclusive os citados no corpo, não só o do frontmatter) e os valores literais de `pr` e `authorization`; confira que todos aparecem no candidato. Token presente no original e ausente depois é perda, mesmo que o texto pareça equivalente — foi assim que uma conversão perdeu 8 hashes em 2026-07-27.
-3. **Medir o candidato antes de gravar**, com `wc -c` — não depois, e não a olho. Teto é `≤1200` no ledger e `≤800` por entrada; **1201 é violação**, e gravar para depois descobrir isso deixa o escopo pior do que estava. Confirmar também datas em `AAAA-MM-DD` e pasta igual a `finished`.
-4. Validar wikilinks — inclusive a evidência de cada entrada — e executar `python3 pop/scripts/pop_validate.py` no escopo corrente. A validação é do **principal**, depois de todas as ondas: worker que valida sozinho aprova o próprio pedaço sem ver a colisão.
-5. Revisar o diff arquivo a arquivo. Se a prova de preservação falhar, restaurar o original e reportar **BLOCKED**.
-6. Backup, se você fizer um, mora **fora** de `memory/` — dentro dela, uma pasta que não seja data é violação de layout, e você teria trocado uma dívida por outra. Apague-o ao fechar; a prova durável é o Git.
-
-## Saída
-
-Relatar arquivos convertidos e enxugados, contagem de caracteres antes/depois, entradas criadas, campos/decisões preservados e validações. Se não houver ganho material sem perda, manter a memory intacta e registrar “sem otimização segura”.
-
-## Limites
-
-- Não editar specs, decisões, roadmaps, cards, código ou Git durante esta operação.
-- Não consolidar memories por epoch/phase, não eliminar eventos e não alterar commits/PRs.
-- Não converter memory de escopo alheio: memory plana com `finished` anterior a 2026-07-27 é legado tolerado e, fora do escopo corrente, não é trabalho seu.
-- Não criar dentro de `memory/` nenhuma pasta que não seja uma data de conclusão — backup, arquivo morto e rascunho ficam fora dela.
-- Na `weekly-review`, a frente de coleta apenas mede e lista; converter é sempre esta skill, com o escopo recortado.
+Report paths, entries created, before/after character counts, preserved fields/decisions, and validations. If no material safe gain exists, leave the file unchanged and record "no safe optimization". Do not edit specs, decisions, roadmaps, cards, code, or Git; do not consolidate memories per epoch/phase; flat memory finished before 2026-07-27 outside the current scope is tolerated legacy and not your work. Never create inside `memory/` any folder that is not a completion date — backups, archives and drafts stay outside it. In the `weekly-review`, the collection front only measures and lists; converting is always this skill, with the scope carved out.

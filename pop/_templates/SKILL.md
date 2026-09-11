@@ -1,18 +1,18 @@
-# Skill — <nome-da-skill>
+# Skill — <skill-name>
 
-- **Projeto:** [[pop/PROJECT|<Nome do projeto>]]
-- **Quando usar:** uma frase — o gatilho que indica que esta skill se aplica.
+- **Project:** [[pop/PROJECT|<Project name>]]
+- **When to use:** one sentence — the trigger indicating this skill applies.
 
-## Procedimento
+## Procedure
 
-1. Passo a passo objetivo, imperativo, sem ambiguidade.
-2. Cada passo verificável.
+1. Objective step-by-step, imperative, no ambiguity.
+2. Each step verifiable.
 3. ...
 
-## Cuidados
+## Caveats
 
-- Erros comuns, pré-condições, o que nunca fazer.
+- Common mistakes, preconditions, what never to do.
 
-## Exemplo
+## Example
 
-Um exemplo curto e concreto de aplicação, se ajudar.
+A short, concrete example of applying it, if helpful.

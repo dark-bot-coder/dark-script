@@ -1,35 +1,35 @@
 ---
 name: plan-roadmap
-description: Entrevista guiada para montar ou evoluir o roadmap de um projeto (epochs, phases, tasks candidatas). Use ao criar um projeto novo, quando o usuário quiser planejar/reestruturar o roadmap, ou quando uma epoch conclui.
+description: Guided interview to build or evolve a project's roadmap (epochs, phases, candidate tasks). Use when creating a new project, when the user wants to plan/restructure the roadmap, or when an epoch completes.
 ---
 
 # plan-roadmap
 
-Constrói o roadmap **junto com o usuário**, por entrevista — nunca invente o caminho sozinho. Funciona para qualquer tipo de projeto (programação, escrita, negócio, pesquisa...).
+Builds the roadmap **together with the user**, by interview — never invent the path on your own. Works for any kind of project (programming, writing, business, research...).
 
-**Delegue a subagentes:** o recon de epoch do passo 4 (paralelos, um por frente); a entrevista e a materialização ficam com o principal.
+**Delegate to subagents:** step 4's epoch recon (parallel, one per front); the interview and materialization stay with the main agent.
 
-## Modo de condução
+## How to conduct
 
-- Pergunte em blocos curtos (2–3 perguntas por vez), reflita o que entendeu antes de avançar.
-- **Proponha, não interrogue:** a partir do objetivo, sugira você as epochs e deixe o usuário reagir — reagir a uma proposta é mais fácil que responder pergunta aberta.
-- "Não sei" é resposta válida → vira item em "Ideias futuras" ou pergunta aberta numa spec.
+- Ask in short blocks (2–3 questions at a time), reflect back what you understood before moving on.
+- **Propose, don't interrogate:** from the goal, suggest the epochs yourself and let the user react — reacting to a proposal is easier than answering an open question.
+- "I don't know" is a valid answer → it becomes an item in "Future ideas" or an open question in a spec.
 
-## Procedimento
+## Procedure
 
-1. **Destino:** pergunte qual é o marco final e qual seria a primeira entrega que já teria valor sozinha.
-2. **Brainstorm de epochs:** proponha de 3 a 7 epochs (capítulos do projeto), uma linha cada, na ordem que faz sentido. Peça reação: cortar, juntar, reordenar, renomear.
-3. **Corte:** o que não entra agora vai para "Ideias futuras" no ROADMAP.md — melhor lista curta de epochs firmes que lista longa de desejos.
-4. **Recon da epoch:** antes de detalhar, levante o que embasa o capítulo **no escopo corrente e nos repos dele** — subagentes só para frentes acima do piso da regra 18 (0 é válido) — e consolide em `pop/researches/<assunto>/`. O que o recon não resolver vira **RECON NEEDED** no arquivo da epoch, com o check exato que resolve (pesquisa, experimento ou task). Conhecimento novo (decisão técnica, mercado, stack) **não se pesquisa na web no fluxo**: proponha o prompt no **`RESEARCHES.md`** do projeto (`_templates/RESEARCHES.md`) para o **usuário** rodar e ingerir (`ingest-research`) antes do planejamento que depende dele.
-5. **Elaboração progressiva:** detalhe em phases **apenas a primeira epoch** (ou a atual). Epochs futuras ficam com uma linha só — serão detalhadas quando chegar a vez delas. Registre no arquivo da epoch os **forks** conhecidos ("se a pesquisa X concluir Y, a phase Z muda assim") e a **condição de abandono/pausa**, se houver (a `weekly-review` audita). Pergunte se alguma epoch/phase roda em **yolo** (seção Yolo mode do [[WORKFLOW|WORKFLOW]]) e registre o bullet `**Yolo:** sim` (ou marcadores por task) — escopo yolo exige tasks de entregável **objetivamente verificável**, o que afeta a granularidade das candidatas.
-6. **Tasks candidatas:** para a primeira phase, proponha 2–5 tasks de uma linha, cada uma com o **effort sugerido** ` · size: S|M|L` na célula Descrição (convenção do [[_templates/EPOCH|template]]) — o `new-task` estampa no card e o humano corrige em 001. **Toda phase termina com a task de verificação** (slug `verificacao-da-phase`, última da tabela, `depends_on` todas as demais): é nela — e só nela — que os testes da phase são escritos e rodam, cobrindo os critérios `verify: phase` acumulados (seção "Verificação de phase" do [[WORKFLOW|WORKFLOW]]); proponha-a sempre, sem perguntar. Não crie as pastas no kanban — isso é a skill `new-task`.
-7. **Specs:** anote os temas que surgiram na conversa e merecem especificação; ofereça criar os rascunhos com a skill `write-spec`.
-8. **Materialize:** `pop/ROADMAP.md` (só epochs) e `pop/roadmap/<n>-<slug>.md` da epoch detalhada (escopo com o harness na própria raiz: os mesmos caminhos, sem o prefixo `pop/`), pelos templates `_templates/ROADMAP.md` e `_templates/EPOCH.md`. Confirme o resultado com o usuário.
+1. **Destination:** ask what the final milestone is and what the first delivery that would already have value on its own would be.
+2. **Epoch brainstorm:** propose 3 to 7 epochs (chapters of the project), one line each, in the order that makes sense. Ask for reactions: cut, merge, reorder, rename.
+3. **Cut:** what doesn't make it now goes to "Future ideas" in ROADMAP.md — better a short list of firm epochs than a long wish list.
+4. **Epoch recon:** before detailing, gather what underpins the chapter **in the current scope and its repos** — subagents only for fronts above rule 18's floor (0 is valid) — and consolidate in `pop/researches/<topic>/`. What the recon doesn't resolve becomes **RECON NEEDED** in the epoch file, with the exact check that resolves it (research, experiment or task). New knowledge (technical decision, market, stack) **is not researched on the web in the flow**: propose the prompt in the project's **`RESEARCHES.md`** (`_templates/RESEARCHES.md`) for the **user** to run and ingest (`ingest-research`) before the planning that depends on it.
+5. **Progressive elaboration:** detail into phases **only the first epoch** (or the current one). Future epochs stay as a single line — they'll be detailed when their turn comes. Record in the epoch file the known **forks** ("if research X concludes Y, phase Z changes like this") and the **abandon/pause condition**, if any (the `weekly-review` audits it). Ask whether any epoch/phase runs in **yolo** (Yolo mode section of the [[WORKFLOW|WORKFLOW]]) and record the `**Yolo:** yes` bullet (or per-task markers) — a yolo scope requires tasks with an **objectively verifiable** deliverable, which affects the candidates' granularity.
+6. **Candidate tasks:** for the first phase, propose 2–5 one-line tasks, each with the **suggested effort** ` · size: S|M|L` in the Description cell (the [[_templates/EPOCH|template]] convention) — `new-task` stamps it on the card and the human corrects it in 001. **Every phase ends with the verification task** (slug `phase-verification`, last in the table, `depends_on` all the others): it is in it — and only in it — that the phase's tests are written and run, covering the accumulated `verify: phase` criteria (section "Phase verification" of the [[WORKFLOW|WORKFLOW]]); always propose it, without asking. Don't create the kanban folders — that's the `new-task` skill.
+7. **Specs:** note the topics that surfaced in the conversation and deserve a specification; offer to create the drafts with the `write-spec` skill.
+8. **Materialize:** `pop/ROADMAP.md` (epochs only) and `pop/roadmap/<n>-<slug>.md` for the detailed epoch (a scope whose harness lives at its own root: the same paths, without the `pop/` prefix), from the `_templates/ROADMAP.md` and `_templates/EPOCH.md` templates. Confirm the result with the user.
 
-## Cuidados
+## Cautions
 
-- Descrições **sempre de uma linha** — detalhe vai para spec.
-- O brief de execução (estratégia, frentes, ownership, riscos e critérios) é do plano da task em 002 — no roadmap entram apenas descrição, dependências e contexto que muda a priorização.
-- Aplicações: os **idiomas suportados (i18n)** declarados no AGENTS.md do projeto entram no planejamento — nenhuma epoch/phase de UI ou conteúdo ignora i18n.
-- Não detalhe epochs futuras "para adiantar": roadmap é elaborado progressivamente; revisite esta skill a cada epoch concluída.
-- IDs seguem a hierarquia (`1`, `1.1`, `1.1.1-<slug>`); links de arquivos fixos com caminho completo + alias.
+- Descriptions are **always one line** — detail goes to a spec.
+- The execution brief (strategy, fronts, ownership, risks and criteria) belongs to task planning in 002 — the roadmap keeps only description, dependencies and context that changes prioritization.
+- Applications: the **supported languages (i18n)** declared in the project's AGENTS.md enter the planning — no UI or content epoch/phase ignores i18n.
+- Don't detail future epochs "to get ahead": the roadmap is elaborated progressively; revisit this skill at each completed epoch.
+- IDs follow the hierarchy (`1`, `1.1`, `1.1.1-<slug>`); links to fixed files use full path + alias.

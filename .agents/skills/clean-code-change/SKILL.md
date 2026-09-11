@@ -1,68 +1,68 @@
 ---
 name: clean-code-change
-description: Práticas de clean code para quem escreve código - clarificar o contrato antes de codar, legibilidade local, refatoração segura e triagem de dívida. Use em toda task que cria ou altera código, ao planejar (002) e ao executar (004). Só projetos de código.
+description: Clean code practices for whoever writes code - clarifying the contract before coding, local readability, safe refactoring and debt triage. Use in every task that creates or changes code, when planning (002) and when executing (004). Code projects only.
 ---
 
 # clean-code-change
 
-**Princípio: código limpo é código que quem não o escreveu entende e modifica com segurança.** Clean code não é métrica única nem checklist estético — é evidência: contrato claro, teste que protege, diff com uma intenção. Esta skill acompanha quem **escreve** código; a revisão usa a irmã `clean-code-review`.
+**Principle: clean code is code that someone who didn't write it understands and modifies safely.** Clean code is neither a single metric nor an aesthetic checklist — it is evidence: a clear contract, a test that protects, a diff with one intention. This skill accompanies whoever **writes** code; review uses the sibling `clean-code-review`.
 
-**Parametrização:** os comandos de verificação (formatter, linter, testes) são os declarados na seção **"Verificação do projeto"** do AGENTS.md do projeto. Esta skill nunca impõe limites numéricos (linhas, parâmetros, aninhamento), SOLID ou padrões de OO — coesão e domínio decidem, não contagem.
+**Parametrization:** the verification commands (formatter, linter, tests) are the ones declared in the **"Project verification"** section of the project's AGENTS.md. This skill never imposes numeric limits (lines, parameters, nesting), SOLID or OO patterns — cohesion and domain decide, not counting.
 
-## 1. Clarifique antes de codar
+## 1. Clarify before coding
 
-**Gatilho:** o requisito, bug ou diff ainda não permite explicar comportamento, fronteiras e efeito observável em poucas frases.
+**Trigger:** the requirement, bug or diff still doesn't let you explain behavior, boundaries and observable effect in a few sentences.
 
-1. Declare **entrada, saída, invariantes, casos de erro e efeitos externos** da mudança.
-2. Localize o contrato existente: API, tipo, teste, documentação ou chamada representativa.
-3. Escolha o **menor ponto de mudança** que preserva esse contrato; sem contrato verificável, escreva ou atualize o teste **antes** da alteração estrutural.
-4. Separe preparação/refatoração da mudança funcional quando misturá-las tornar o diff difícil de revisar.
+1. State the change's **input, output, invariants, error cases and external effects**.
+2. Locate the existing contract: API, type, test, documentation or a representative call.
+3. Choose the **smallest change point** that preserves that contract; without a verifiable contract, write or update the test **before** the structural change.
+4. Separate preparation/refactoring from the functional change when mixing them makes the diff hard to review.
 
-**Saída verificável:** descrição do comportamento + teste/cenário que **falha antes e passa depois** da mudança. Em task do kanban, isso alimenta a tabela "Critérios de aceite e verificação" do plano (002).
+**Verifiable output:** a description of the behavior + a test/scenario that **fails before and passes after** the change. In a kanban task, this feeds the "Acceptance criteria and verification" table of the plan (002).
 
-## 2. Legibilidade local
+## 2. Local readability
 
-**Gatilho:** o leitor precisa simular muitos estados, adivinhar a intenção de um nome ou alternar entre arquivos para entender uma unidade.
+**Trigger:** the reader has to simulate too many states, guess the intention of a name or hop between files to understand one unit.
 
-1. Renomeie símbolos para **domínio, papel e unidade** — nem siglas opacas, nem frases redundantes.
-2. Torne o caminho feliz e os casos excepcionais **distinguíveis**; reduza negações e aninhamento apenas quando o fluxo ficar mais direto.
-3. Extraia função/conceito **somente** se o resultado for um nome que explica uma ideia mantendo coesão — não divida uma operação coesa em camadas artificiais para "encurtar".
-4. Comentário serve para **motivo, restrição, trade-off ou protocolo externo**; apague comentário que apenas narra o código.
+1. Rename symbols for **domain, role and unit** — neither opaque acronyms nor redundant phrases.
+2. Make the happy path and the exceptional cases **distinguishable**; reduce negations and nesting only when the flow gets more direct.
+3. Extract a function/concept **only** if the result is a name that explains one idea while keeping cohesion — don't split a cohesive operation into artificial layers to "shorten" it.
+4. A comment exists for **motive, constraint, trade-off or external protocol**; delete comments that merely narrate the code.
 
-**Saída verificável:** um leitor novo explica "o quê" e "por quê" olhando nomes, organização e comentário mínimo.
+**Verifiable output:** a new reader explains the "what" and the "why" by looking at names, organization and minimal commentary.
 
-## 3. Refatore com segurança
+## 3. Refactor safely
 
-**Gatilho:** uma mudança recorrente está cara por acoplamento, duplicação com regra realmente comum, fluxo opaco ou fronteira de módulo confusa.
+**Trigger:** a recurring change is expensive due to coupling, duplication with a genuinely shared rule, opaque flow or a confusing module boundary.
 
-1. **Caracterize** o comportamento atual com testes, exemplos executáveis ou outra observação confiável — sem rede, primeiro reduza o risco.
-2. Nomeie a **hipótese** (que leitura/manutenção fica mais simples) e o **risco** (que comportamento não pode mudar).
-3. Aplique **uma transformação pequena por vez**: renomear, extrair, mover, encapsular, simplificar condição.
-4. Compile, rode os testes relevantes e revise o diff **a cada passo**; pare quando o objetivo for atendido.
-5. Refatoração ampla vai em mudança **separada** da funcionalidade (no PoP: outra task), salvo limpeza local óbvia.
+1. **Characterize** the current behavior with tests, executable examples or another reliable observation — without a net, reduce the risk first.
+2. Name the **hypothesis** (which reading/maintenance becomes simpler) and the **risk** (which behavior must not change).
+3. Apply **one small transformation at a time**: rename, extract, move, encapsulate, simplify a condition.
+4. Compile, run the relevant tests and review the diff **at every step**; stop when the goal is met.
+5. Broad refactoring goes in a **separate** change from the feature (in the PoP: another task), except obvious local cleanup.
 
-**Saída verificável:** comportamento preservado por testes e diff com **uma única intenção estrutural**.
+**Verifiable output:** behavior preserved by tests and a diff with **a single structural intention**.
 
-## 4. Duplicação e abstração
+## 4. Duplication and abstraction
 
-- Unifique duplicação **só** se a regra e o ritmo de mudança forem os mesmos — abstração prematura mistura casos distintos e custa mais que a repetição.
-- Uma abstração é valiosa quando simplifica uma **variação real**; não generalize por adivinhação nem crie interface de uso único.
-- Simplicidade = a **menor quantidade de conceitos** que atende o requisito atual.
+- Unify duplication **only** if the rule and the rate of change are the same — premature abstraction mixes distinct cases and costs more than the repetition.
+- An abstraction is valuable when it simplifies a **real variation**; don't generalize by guessing and don't create a single-use interface.
+- Simplicity = the **smallest number of concepts** that meets the current requirement.
 
-## 5. Triagem de dívida na mudança
+## 5. Debt triage within the change
 
-**Gatilho:** a alteração introduz complexidade, duplicação ou um alerta de ferramenta — não espere o repositório degradar.
+**Trigger:** the change introduces complexity, duplication or a tool warning — don't wait for the repository to degrade.
 
-1. Rode formatter, linter, análise estática e testes **do projeto** (seção "Verificação do projeto" do AGENTS.md).
-2. Diferencie **alerta mecânico de risco real**: priorize caminho crítico, código frequentemente alterado, falha de teste, segurança e custo de entendimento. Smell é sinal de investigação, não prova de defeito.
-3. Corrija o que é **local e seguro** dentro da task; dívida maior vira item rastreável (nota no card, seção "Aberto" da spec ou proposta de task) com contexto, impacto e próximo passo.
-4. A régua é **melhorar a saúde geral a cada mudança**, não exigir perfeição antes de integrar.
+1. Run the **project's** formatter, linter, static analysis and tests ("Project verification" section of the AGENTS.md).
+2. Distinguish **mechanical warning from real risk**: prioritize the critical path, frequently changed code, test failures, security and cost of understanding. A smell is a signal for investigation, not proof of a defect.
+3. Fix what is **local and safe** within the task; larger debt becomes a trackable item (note on the card, the spec's "Open" section or a task proposal) with context, impact and next step.
+4. The yardstick is **improving overall health with every change**, not demanding perfection before integrating.
 
-**Saída verificável:** evidência dos comandos executados e decisão explícita para cada desvio relevante.
+**Verifiable output:** evidence of the commands executed and an explicit decision for every relevant deviation.
 
-## O que esta skill não é
+## What this skill is not
 
-- Não é maximizar número de arquivos, classes, interfaces ou camadas.
-- Não é obedecer limites rígidos de linhas, parâmetros ou aninhamento ignorando coesão e domínio.
-- Não substitui arquitetura, segurança, desempenho, acessibilidade, requisitos nem testes de integração.
-- Não justifica refatorar sem valor: código pouco elegante, mas estável e raro de mudar, pode não ser prioridade — nunca reescreva código estável sem benefício demonstrável.
+- It is not maximizing the number of files, classes, interfaces or layers.
+- It is not obeying rigid limits of lines, parameters or nesting while ignoring cohesion and domain.
+- It does not replace architecture, security, performance, accessibility, requirements or integration tests.
+- It does not justify refactoring without value: inelegant but stable and rarely changed code may not be a priority — never rewrite stable code without a demonstrable benefit.

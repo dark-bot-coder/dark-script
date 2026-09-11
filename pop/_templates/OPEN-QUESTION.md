@@ -1,17 +1,17 @@
 ---
-status: aberta
-origem: <de onde veio: rascunho | projeto | sessão | weekly-review>
-created: AAAA-MM-DD
+status: open
+origin: <where it came from: draft | project | session | weekly-review>
+created: YYYY-MM-DD
 ---
 
-# <a pergunta, em uma linha>
+# <the question, in one line>
 
-> Arquivo `pop/open_questions/AAAA-MM-DD-<slug>.md` (escopo com o harness na própria raiz: `open_questions/`, sem o prefixo `pop/`), criado pelo **agente** quando uma decisão depende do humano e não pertence a nenhum card. As `status: aberta` aparecem no [[INBOX|INBOX]]. Blockquotes são instruções — apague-as ao preencher.
+> File `pop/open_questions/YYYY-MM-DD-<slug>.md` (a scope whose harness lives at its own root: `open_questions/`, without the `pop/` prefix), created by the **agent** when a decision depends on the human and belongs to no card. The `status: open` ones show up in the [[INBOX|INBOX]]. Blockquotes are instructions — delete them when filling it in.
 
-Contexto em poucas linhas: por que a pergunta existe e o que ela bloqueia, com link para a origem (rascunho, projeto, nota). Se houver opções, cada uma com trade-off de uma linha.
+Context in a few lines: why the question exists and what it blocks, with a link to the origin (draft, project, note). If there are options, each one with a one-line trade-off.
 
-## Resposta (user)
+## Answer (user)
 
-<em branco — o humano responde aqui>
+<blank — the human answers here>
 
-> Respondida → o agente aplica a resposta, muda `status:` para `respondida` e, se virar decisão de harness ou de projeto, registra em `pop/notes/decisions/` antes de encerrar a sessão.
+> Answered → the agent applies the answer, changes `status:` to `answered` and, if it becomes a harness or project decision, records it in `pop/notes/decisions/` before ending the session.
